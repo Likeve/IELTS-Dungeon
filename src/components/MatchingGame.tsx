@@ -61,8 +61,8 @@ export default function MatchingGame() {
   const [matchedPairs, setMatchedPairs] = useState<Set<string>>(new Set());
   const [isMounted, setIsMounted] = useState(false);
   
-  const WORDS_PER_STAGE = 50;
-  const TOTAL_STAGES = 6;
+  const WORDS_PER_STAGE = 10;
+  const TOTAL_STAGES = 30;
 
   const loadStage = (stage: number, pairs: PairData[]) => {
     setCurrentStage(stage);
@@ -267,7 +267,7 @@ export default function MatchingGame() {
           <div className="flex justify-center mb-6">
             <CheckCircle2 className="w-20 h-20 text-green-500" />
           </div>
-          <h2 className="text-2xl font-bold text-green-700 mb-6">太棒了！你完成了所有 300 个单词！</h2>
+          <h2 className="text-2xl font-bold text-green-700 mb-6">太棒了！你完成了所有 {allPairs.length} 个{gameMode === "words" ? "单词" : "短语"}！</h2>
           <button 
             onClick={() => startFullGame(gameMode)}
             className="px-8 py-3 bg-green-500 text-white rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
@@ -285,7 +285,7 @@ export default function MatchingGame() {
             <CheckCircle2 className="w-20 h-20 text-blue-500" />
           </div>
           <h2 className="text-2xl font-bold text-blue-700 mb-6">阶段 {currentStage} 完成！</h2>
-          <p className="text-blue-600 mb-8 font-medium">你已经掌握了这 50 个单词，继续挑战下一组吧！</p>
+          <p className="text-blue-600 mb-8 font-medium">你已经掌握了这 {WORDS_PER_STAGE} 个{gameMode === "words" ? "单词" : "短语"}，继续挑战下一组吧！</p>
           <button 
             onClick={handleNextStage}
             className="px-8 py-3 bg-blue-500 text-white rounded-2xl font-bold text-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
