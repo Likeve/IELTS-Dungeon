@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 雅思词汇消消乐 (IELTS Dungeon)
 
-## Getting Started
+一个基于 Next.js 和 Tailwind CSS 构建的雅思词汇学习小工具，采用类似多邻国 (Duolingo) 的连线消消乐交互模式，让背单词变得更轻松有趣。
 
-First, run the development server:
+## 🌟 核心功能
 
+- **双模式学习**：
+  - **雅思词汇模式**：英文单词与中文释义配对。
+  - **雅思短语同义替换模式**：英文短语与同义英文短语配对（雅思阅读/听力核心考点）。
+- **游戏化交互**：
+  - 面板始终保持 6 对词汇，配对成功后自动补充新词汇。
+  - 成功配对显示绿色反馈并平滑消失。
+  - 错误配对显示红色反馈并伴随抖动动画。
+- **语音朗读**：点击英文单词或短语时，自动调用浏览器原生 TTS (Text-to-Speech) 播放纯正美式发音。
+- **阶段性进度**：内置 300 个核心词汇和 300 组同义替换短语，每 50 个为一阶段，共 6 个阶段，循序渐进。
+
+## 🚀 技术栈
+
+- **框架**: [Next.js 16](https://nextjs.org/) (App Router)
+- **样式**: [Tailwind CSS](https://tailwindcss.com/)
+- **动画**: [Framer Motion](https://www.framer.com/motion/)
+- **图标**: [Lucide React](https://lucide.dev/)
+- **语言**: TypeScript
+
+## 📦 本地运行
+
+1. 克隆项目到本地：
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Likeve/IELTS-Dungeon.git
+cd IELTS-Dungeon
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 安装依赖：
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. 启动开发服务器：
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. 在浏览器中打开 [http://localhost:3000](http://localhost:3000) 即可体验。
 
-## Learn More
+## 📁 目录结构
 
-To learn more about Next.js, take a look at the following resources:
+- `src/components/MatchingGame.tsx` - 核心游戏组件逻辑与 UI
+- `src/data/ieltsWords.ts` - 300 个雅思核心词汇数据
+- `src/data/ieltsPhrases.ts` - 300 组雅思短语同义替换数据
+- `src/app/page.tsx` - 主页面入口
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🤝 贡献
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+欢迎提交 Issue 或 Pull Request 来扩充词汇库或优化交互体验！
