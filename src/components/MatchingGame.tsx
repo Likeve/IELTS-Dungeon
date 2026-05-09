@@ -58,7 +58,7 @@ const highlightPhrase = (text: string, phrase1: string, phrase2: string) => {
   
   return parts.map((part, i) => {
     if (part.toLowerCase() === phrase1.toLowerCase() || part.toLowerCase() === phrase2.toLowerCase()) {
-      return <strong key={i} className="text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded-md mx-0.5">{part}</strong>;
+      return <strong key={i} className="text-black font-bold bg-gray-200 px-1.5 py-0.5 rounded-md mx-0.5">{part}</strong>;
     }
     return part;
   });
