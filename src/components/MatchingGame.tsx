@@ -555,7 +555,7 @@ export default function MatchingGame() {
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 0.4, delay: 0.2 }}
+                              transition={{ duration: 1.5, delay: 0.2 }}
                               className="text-red-700 bg-red-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {leftPhrase.phrase1}
@@ -563,7 +563,7 @@ export default function MatchingGame() {
                             <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 0.4, delay: 0.6 }}
+                              transition={{ duration: 1.5, delay: 0.6 }}
                               className="text-green-700 bg-green-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {leftPhrase.phrase2}
@@ -584,7 +584,7 @@ export default function MatchingGame() {
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 0.4, delay: 1.0 }}
+                              transition={{ duration: 1.5, delay: 1.0 }}
                               className="text-red-700 bg-red-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {rightPhrase.phrase2}
@@ -592,7 +592,7 @@ export default function MatchingGame() {
                             <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 0.4, delay: 1.4 }}
+                              transition={{ duration: 1.5, delay: 1.4 }}
                               className="text-green-700 bg-green-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {rightPhrase.phrase1}
