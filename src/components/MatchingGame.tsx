@@ -518,7 +518,7 @@ export default function MatchingGame() {
                             {phraseData.examples.map((ex, idx) => (
                               <li key={idx} className="flex gap-3 text-gray-700 bg-gray-50 p-3 rounded-xl leading-relaxed">
                                 <span className="font-bold text-blue-500 shrink-0">{idx + 1}.</span>
-                                <span>{highlightPhrase(ex, phraseData.phrase1, phraseData.phrase2)}</span>
+                                <span className="font-medium">{highlightPhrase(ex, phraseData.phrase1, phraseData.phrase2)}</span>
                               </li>
                             ))}
                           </ul>
@@ -561,7 +561,7 @@ export default function MatchingGame() {
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {leftPhrase.meaningEn}</p>
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">翻译:</span> {leftPhrase.meaningZh}</p>
                           </div>
-                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed">
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed font-medium">
                             <span className="font-semibold text-blue-500">Example: </span>
                             {highlightPhrase(leftPhrase.examples[0], leftPhrase.phrase1, leftPhrase.phrase2)}
                           </div>
@@ -578,7 +578,7 @@ export default function MatchingGame() {
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {rightPhrase.meaningEn}</p>
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">翻译:</span> {rightPhrase.meaningZh}</p>
                           </div>
-                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed">
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed font-medium">
                             <span className="font-semibold text-blue-500">Example: </span>
                             {highlightPhrase(rightPhrase.examples[0], rightPhrase.phrase1, rightPhrase.phrase2)}
                           </div>
