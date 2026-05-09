@@ -462,20 +462,20 @@ export default function MatchingGame() {
                       
                       <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
                         <div className="flex items-center justify-center gap-4 text-xl font-bold text-gray-800">
-                          <span>{phraseData.phrase1}</span>
+                          <span className="text-indigo-700 bg-indigo-100 px-3 py-1 rounded-lg">{phraseData.phrase1}</span>
                           <span className="text-green-500">=</span>
-                          <span>{phraseData.phrase2}</span>
+                          <span className="text-indigo-700 bg-indigo-100 px-3 py-1 rounded-lg">{phraseData.phrase2}</span>
                         </div>
                       </div>
 
                       <div className="space-y-5">
                         <div>
                           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Meaning (English)</h3>
-                          <p className="text-gray-800 text-lg">{phraseData.meaningEn}</p>
+                          <p className="text-black font-bold text-lg">{phraseData.meaningEn}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">翻译 (Chinese)</h3>
-                          <p className="text-gray-800 text-lg">{phraseData.meaningZh}</p>
+                          <p className="text-black font-bold text-lg">{phraseData.meaningZh}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">IELTS Examples</h3>
@@ -518,13 +518,13 @@ export default function MatchingGame() {
                         {/* Left Phrase Info */}
                         <div className="p-5 bg-red-50 rounded-2xl border border-red-100">
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
-                            <span className="text-red-600">{leftPhrase.phrase1}</span>
-                            <span className="text-gray-400 text-sm font-normal">同义词应为:</span>
-                            <span className="text-green-600">{leftPhrase.phrase2}</span>
+                            <span className="text-red-700 bg-red-100 px-2 py-1 rounded-lg">{leftPhrase.phrase1}</span>
+                            <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
+                            <span className="text-green-700 bg-green-100 px-2 py-1 rounded-lg">{leftPhrase.phrase2}</span>
                           </div>
                           <div className="space-y-2 mb-4">
-                            <p className="text-gray-700"><span className="font-semibold">Meaning:</span> {leftPhrase.meaningEn}</p>
-                            <p className="text-gray-700"><span className="font-semibold">翻译:</span> {leftPhrase.meaningZh}</p>
+                            <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {leftPhrase.meaningEn}</p>
+                            <p className="text-black font-bold"><span className="font-semibold text-gray-500">翻译:</span> {leftPhrase.meaningZh}</p>
                           </div>
                           <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed">
                             <span className="font-semibold text-blue-500">Example: </span>
@@ -535,13 +535,13 @@ export default function MatchingGame() {
                         {/* Right Phrase Info */}
                         <div className="p-5 bg-red-50 rounded-2xl border border-red-100">
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
-                            <span className="text-red-600">{rightPhrase.phrase2}</span>
-                            <span className="text-gray-400 text-sm font-normal">同义词应为:</span>
-                            <span className="text-green-600">{rightPhrase.phrase1}</span>
+                            <span className="text-red-700 bg-red-100 px-2 py-1 rounded-lg">{rightPhrase.phrase2}</span>
+                            <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
+                            <span className="text-green-700 bg-green-100 px-2 py-1 rounded-lg">{rightPhrase.phrase1}</span>
                           </div>
                           <div className="space-y-2 mb-4">
-                            <p className="text-gray-700"><span className="font-semibold">Meaning:</span> {rightPhrase.meaningEn}</p>
-                            <p className="text-gray-700"><span className="font-semibold">翻译:</span> {rightPhrase.meaningZh}</p>
+                            <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {rightPhrase.meaningEn}</p>
+                            <p className="text-black font-bold"><span className="font-semibold text-gray-500">翻译:</span> {rightPhrase.meaningZh}</p>
                           </div>
                           <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed">
                             <span className="font-semibold text-blue-500">Example: </span>
