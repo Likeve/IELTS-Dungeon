@@ -553,9 +553,21 @@ export default function MatchingGame() {
                         {/* Left Phrase Info */}
                         <div className="p-5 bg-red-50 rounded-2xl border border-red-100">
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
-                            <span className="text-red-700 bg-red-100 px-2 py-1 rounded-lg">{leftPhrase.phrase1}</span>
+                            <motion.span 
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 0.4, delay: 0.2 }}
+                              className="text-red-700 bg-red-100 px-2 py-1 rounded-lg inline-block"
+                            >
+                              {leftPhrase.phrase1}
+                            </motion.span>
                             <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
-                            <span className="text-green-700 bg-green-100 px-2 py-1 rounded-lg">{leftPhrase.phrase2}</span>
+                            <motion.span 
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 0.4, delay: 0.6 }}
+                              className="text-green-700 bg-green-100 px-2 py-1 rounded-lg inline-block"
+                            >
+                              {leftPhrase.phrase2}
+                            </motion.span>
                           </div>
                           <div className="space-y-2 mb-4">
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {leftPhrase.meaningEn}</p>
@@ -570,9 +582,21 @@ export default function MatchingGame() {
                         {/* Right Phrase Info */}
                         <div className="p-5 bg-red-50 rounded-2xl border border-red-100">
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
-                            <span className="text-red-700 bg-red-100 px-2 py-1 rounded-lg">{rightPhrase.phrase2}</span>
+                            <motion.span 
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 0.4, delay: 1.0 }}
+                              className="text-red-700 bg-red-100 px-2 py-1 rounded-lg inline-block"
+                            >
+                              {rightPhrase.phrase2}
+                            </motion.span>
                             <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
-                            <span className="text-green-700 bg-green-100 px-2 py-1 rounded-lg">{rightPhrase.phrase1}</span>
+                            <motion.span 
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 0.4, delay: 1.4 }}
+                              className="text-green-700 bg-green-100 px-2 py-1 rounded-lg inline-block"
+                            >
+                              {rightPhrase.phrase1}
+                            </motion.span>
                           </div>
                           <div className="space-y-2 mb-4">
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {rightPhrase.meaningEn}</p>
