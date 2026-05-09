@@ -65,7 +65,7 @@ export default function MatchingGame() {
   const [isMounted, setIsMounted] = useState(false);
   
   const WORDS_PER_STAGE = 10;
-  const TOTAL_STAGES = 30;
+  const TOTAL_STAGES = Math.ceil(allPairs.length / WORDS_PER_STAGE) || 1;
 
   const loadStage = (stage: number, pairs: PairData[]) => {
     setCurrentStage(stage);
