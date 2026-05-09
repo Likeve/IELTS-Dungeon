@@ -43,6 +43,27 @@ const speakText = (text: string, lang: string) => {
   }
 };
 
+// Helper: Highlight phrase in text
+const highlightPhrase = (text: string, phrase1: string, phrase2: string) => {
+  if (!phrase1 && !phrase2) return text;
+  
+  // Escape regex special characters
+  const escapeRegExp = (string: string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const p1 = escapeRegExp(phrase1);
+  const p2 = escapeRegExp(phrase2);
+  
+  // Create a case-insensitive regex to match either phrase
+  const regex = new RegExp(`(${p1}|${p2})`, 'gi');
+  const parts = text.split(regex);
+  
+  return parts.map((part, i) => {
+    if (part.toLowerCase() === phrase1.toLowerCase() || part.toLowerCase() === phrase2.toLowerCase()) {
+      return <strong key={i} className="text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded-md mx-0.5">{part}</strong>;
+    }
+    return part;
+  });
+};
+
 export default function MatchingGame() {
   const [leftItems, setLeftItems] = useState<GameItem[]>([]);
   const [rightItems, setRightItems] = useState<GameItem[]>([]);
@@ -460,9 +481,9 @@ export default function MatchingGame() {
                           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">IELTS Examples</h3>
                           <ul className="space-y-3">
                             {phraseData.examples.map((ex, idx) => (
-                              <li key={idx} className="flex gap-3 text-gray-700 bg-gray-50 p-3 rounded-xl">
-                                <span className="font-bold text-blue-500">{idx + 1}.</span>
-                                <span>{ex}</span>
+                              <li key={idx} className="flex gap-3 text-gray-700 bg-gray-50 p-3 rounded-xl leading-relaxed">
+                                <span className="font-bold text-blue-500 shrink-0">{idx + 1}.</span>
+                                <span>{highlightPhrase(ex, phraseData.phrase1, phraseData.phrase2)}</span>
                               </li>
                             ))}
                           </ul>
@@ -505,9 +526,9 @@ export default function MatchingGame() {
                             <p className="text-gray-700"><span className="font-semibold">Meaning:</span> {leftPhrase.meaningEn}</p>
                             <p className="text-gray-700"><span className="font-semibold">翻译:</span> {leftPhrase.meaningZh}</p>
                           </div>
-                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl">
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed">
                             <span className="font-semibold text-blue-500">Example: </span>
-                            {leftPhrase.examples[0]}
+                            {highlightPhrase(leftPhrase.examples[0], leftPhrase.phrase1, leftPhrase.phrase2)}
                           </div>
                         </div>
 
@@ -522,9 +543,9 @@ export default function MatchingGame() {
                             <p className="text-gray-700"><span className="font-semibold">Meaning:</span> {rightPhrase.meaningEn}</p>
                             <p className="text-gray-700"><span className="font-semibold">翻译:</span> {rightPhrase.meaningZh}</p>
                           </div>
-                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl">
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed">
                             <span className="font-semibold text-blue-500">Example: </span>
-                            {rightPhrase.examples[0]}
+                            {highlightPhrase(rightPhrase.examples[0], rightPhrase.phrase1, rightPhrase.phrase2)}
                           </div>
                         </div>
                       </div>
