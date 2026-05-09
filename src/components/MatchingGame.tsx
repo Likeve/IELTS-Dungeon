@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, BookOpen, MessageCircle } from "lucide-react";
+import { CheckCircle2, BookOpen, MessageCircle, X } from "lucide-react";
 import { IELTS_WORDS } from "@/data/ieltsWords";
-import { IELTS_PHRASES } from "@/data/ieltsPhrases";
+import { IELTS_PHRASES, PhrasePair } from "@/data/ieltsPhrases";
 
 // Types
 type GameItem = {
@@ -53,6 +53,9 @@ export default function MatchingGame() {
   const [errorPair, setErrorPair] = useState<{ left: string; right: string } | null>(null);
   const [successPair, setSuccessPair] = useState<{ left: string; right: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState<any>(null);
   
   const [gameMode, setGameMode] = useState<"words" | "phrases">("words");
   const [allPairs, setAllPairs] = useState<PairData[]>([]);
@@ -163,49 +166,76 @@ export default function MatchingGame() {
       // Match successful
       setSuccessPair({ left: leftId, right: rightId });
       setTimeout(() => {
-        const nextWordIndex = matchedPairs.size + 6;
-        let nextEn: GameItem | null = null;
-        let nextZh: GameItem | null = null;
-
-        if (nextWordIndex < wordPool.length) {
-          const nextPair = wordPool[nextWordIndex];
-          nextEn = { id: `left-${nextPair.id}`, text: nextPair.left, type: "left", pairId: nextPair.id };
-          nextZh = { id: `right-${nextPair.id}`, text: nextPair.right, type: "right", pairId: nextPair.id };
+        if (gameMode === "phrases") {
+          setModalData({ isMatch: true, leftId, rightId, pairId: leftItem!.pairId });
+          setShowModal(true);
+        } else {
+          handleMatchSuccess(leftId, rightId, leftItem!.pairId);
         }
-
-        setLeftItems((prev) => {
-          const arr = prev.filter((i) => i.id !== leftId);
-          if (nextEn) {
-            const insertPos = Math.floor(Math.random() * (arr.length + 1));
-            arr.splice(insertPos, 0, nextEn);
-          }
-          return arr;
-        });
-
-        setRightItems((prev) => {
-          const arr = prev.filter((i) => i.id !== rightId);
-          if (nextZh) {
-            const insertPos = Math.floor(Math.random() * (arr.length + 1));
-            arr.splice(insertPos, 0, nextZh);
-          }
-          return arr;
-        });
-
-        setMatchedPairs((prev) => new Set(prev).add(leftItem!.pairId));
-        setSelectedLeft(null);
-        setSelectedRight(null);
-        setSuccessPair(null);
-        setIsProcessing(false);
       }, 500);
     } else {
       // Match failed
       setErrorPair({ left: leftId, right: rightId });
       setTimeout(() => {
-        setErrorPair(null);
-        setSelectedLeft(null);
-        setSelectedRight(null);
-        setIsProcessing(false);
+        if (gameMode === "phrases") {
+          setModalData({ isMatch: false, leftId, rightId, leftPairId: leftItem!.pairId, rightPairId: rightItem!.pairId });
+          setShowModal(true);
+        } else {
+          handleMatchFail();
+        }
       }, 800);
+    }
+  };
+
+  const handleMatchSuccess = (leftId: string, rightId: string, pairId: string) => {
+    const nextWordIndex = matchedPairs.size + 6;
+    let nextEn: GameItem | null = null;
+    let nextZh: GameItem | null = null;
+
+    if (nextWordIndex < wordPool.length) {
+      const nextPair = wordPool[nextWordIndex];
+      nextEn = { id: `left-${nextPair.id}`, text: nextPair.left, type: "left", pairId: nextPair.id };
+      nextZh = { id: `right-${nextPair.id}`, text: nextPair.right, type: "right", pairId: nextPair.id };
+    }
+
+    setLeftItems((prev) => {
+      const arr = prev.filter((i) => i.id !== leftId);
+      if (nextEn) {
+        const insertPos = Math.floor(Math.random() * (arr.length + 1));
+        arr.splice(insertPos, 0, nextEn);
+      }
+      return arr;
+    });
+
+    setRightItems((prev) => {
+      const arr = prev.filter((i) => i.id !== rightId);
+      if (nextZh) {
+        const insertPos = Math.floor(Math.random() * (arr.length + 1));
+        arr.splice(insertPos, 0, nextZh);
+      }
+      return arr;
+    });
+
+    setMatchedPairs((prev) => new Set(prev).add(pairId));
+    setSelectedLeft(null);
+    setSelectedRight(null);
+    setSuccessPair(null);
+    setIsProcessing(false);
+  };
+
+  const handleMatchFail = () => {
+    setErrorPair(null);
+    setSelectedLeft(null);
+    setSelectedRight(null);
+    setIsProcessing(false);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    if (modalData.isMatch) {
+      handleMatchSuccess(modalData.leftId, modalData.rightId, modalData.pairId);
+    } else {
+      handleMatchFail();
     }
   };
 
@@ -376,6 +406,143 @@ export default function MatchingGame() {
           </div>
         </div>
       )}
+      {/* Modal Overlay */}
+      <AnimatePresence>
+        {showModal && modalData && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 relative"
+            >
+              <button 
+                onClick={handleCloseModal}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {modalData.isMatch ? (
+                (() => {
+                  const phraseData = IELTS_PHRASES.find(p => p.id === modalData.pairId);
+                  if (!phraseData) return null;
+                  return (
+                    <div className="space-y-6 mt-2">
+                      <div className="flex items-center justify-center gap-3 text-green-600 mb-6">
+                        <CheckCircle2 className="w-8 h-8" />
+                        <h2 className="text-2xl font-bold">配对成功！</h2>
+                      </div>
+                      
+                      <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
+                        <div className="flex items-center justify-center gap-4 text-xl font-bold text-gray-800">
+                          <span>{phraseData.phrase1}</span>
+                          <span className="text-green-500">=</span>
+                          <span>{phraseData.phrase2}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-5">
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Meaning (English)</h3>
+                          <p className="text-gray-800 text-lg">{phraseData.meaningEn}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">翻译 (Chinese)</h3>
+                          <p className="text-gray-800 text-lg">{phraseData.meaningZh}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">IELTS Examples</h3>
+                          <ul className="space-y-3">
+                            {phraseData.examples.map((ex, idx) => (
+                              <li key={idx} className="flex gap-3 text-gray-700 bg-gray-50 p-3 rounded-xl">
+                                <span className="font-bold text-blue-500">{idx + 1}.</span>
+                                <span>{ex}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={handleCloseModal}
+                        className="w-full py-4 mt-4 bg-green-500 text-white rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-md active:scale-[0.98]"
+                      >
+                        继续游戏
+                      </button>
+                    </div>
+                  );
+                })()
+              ) : (
+                (() => {
+                  const leftPhrase = IELTS_PHRASES.find(p => p.id === modalData.leftPairId);
+                  const rightPhrase = IELTS_PHRASES.find(p => p.id === modalData.rightPairId);
+                  if (!leftPhrase || !rightPhrase) return null;
+                  
+                  return (
+                    <div className="space-y-6 mt-2">
+                      <div className="flex items-center justify-center gap-3 text-red-600 mb-6">
+                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center font-bold text-xl">!</div>
+                        <h2 className="text-2xl font-bold">配对失败</h2>
+                      </div>
+                      
+                      <p className="text-gray-600 text-center">你选择的两个短语并不是同义词。请查看它们的正确含义：</p>
+
+                      <div className="space-y-6">
+                        {/* Left Phrase Info */}
+                        <div className="p-5 bg-red-50 rounded-2xl border border-red-100">
+                          <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
+                            <span className="text-red-600">{leftPhrase.phrase1}</span>
+                            <span className="text-gray-400 text-sm font-normal">同义词应为:</span>
+                            <span className="text-green-600">{leftPhrase.phrase2}</span>
+                          </div>
+                          <div className="space-y-2 mb-4">
+                            <p className="text-gray-700"><span className="font-semibold">Meaning:</span> {leftPhrase.meaningEn}</p>
+                            <p className="text-gray-700"><span className="font-semibold">翻译:</span> {leftPhrase.meaningZh}</p>
+                          </div>
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl">
+                            <span className="font-semibold text-blue-500">Example: </span>
+                            {leftPhrase.examples[0]}
+                          </div>
+                        </div>
+
+                        {/* Right Phrase Info */}
+                        <div className="p-5 bg-red-50 rounded-2xl border border-red-100">
+                          <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
+                            <span className="text-red-600">{rightPhrase.phrase2}</span>
+                            <span className="text-gray-400 text-sm font-normal">同义词应为:</span>
+                            <span className="text-green-600">{rightPhrase.phrase1}</span>
+                          </div>
+                          <div className="space-y-2 mb-4">
+                            <p className="text-gray-700"><span className="font-semibold">Meaning:</span> {rightPhrase.meaningEn}</p>
+                            <p className="text-gray-700"><span className="font-semibold">翻译:</span> {rightPhrase.meaningZh}</p>
+                          </div>
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl">
+                            <span className="font-semibold text-blue-500">Example: </span>
+                            {rightPhrase.examples[0]}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={handleCloseModal}
+                        className="w-full py-4 mt-4 bg-red-500 text-white rounded-2xl font-bold text-lg hover:bg-red-600 transition-colors shadow-md active:scale-[0.98]"
+                      >
+                        我知道了
+                      </button>
+                    </div>
+                  );
+                })()
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
