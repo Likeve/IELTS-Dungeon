@@ -47,21 +47,56 @@ const speakText = (text: string, lang: string) => {
 const highlightPhrase = (text: string, phrase1: string, phrase2: string) => {
   if (!phrase1 && !phrase2) return text;
   
-  // Escape regex special characters
-  const escapeRegExp = (string: string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const p1 = escapeRegExp(phrase1);
-  const p2 = escapeRegExp(phrase2);
-  
-  // Create a case-insensitive regex to match either phrase
-  const regex = new RegExp(`(${p1}|${p2})`, 'gi');
-  const parts = text.split(regex);
-  
-  return parts.map((part, i) => {
-    if (part.toLowerCase() === phrase1.toLowerCase() || part.toLowerCase() === phrase2.toLowerCase()) {
-      return <strong key={i} className="text-black font-bold bg-gray-200 px-1.5 py-0.5 rounded-md mx-0.5">{part}</strong>;
+  const buildRegexStr = (phrase: string) => {
+    if (!phrase) return '';
+    // Escape regex special characters except spaces
+    let p = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    if (p.startsWith('be ')) {
+      p = '(?:be|is|are|am|was|were|been|being)\\s+' + p.substring(3);
+    } else {
+      const firstWord = p.split(' ')[0];
+      const irregulars: Record<string, string> = {
+        'take': 't[a-z]+', 'give': 'g[a-z]+', 'come': 'c[a-z]+', 'go': 'g[a-z]+',
+        'make': 'm[a-z]+', 'have': 'h[a-z]+', 'get': 'g[a-z]+', 'fall': 'f[a-z]+',
+        'bring': 'b[a-z]+', 'catch': 'c[a-z]+', 'run': 'r[a-z]+', 'throw': 't[a-z]+',
+        'draw': 'd[a-z]+', 'lead': 'l[a-z]+', 'leave': 'l[a-z]+', 'lose': 'l[a-z]+',
+        'pay': 'p[a-z]+', 'stick': 's[a-z]+', 'think': 't[a-z]+', 'do': 'd[a-z]+',
+        'die': 'd[a-z]+', 'lay': 'l[a-z]+', 'set': 'set[a-z]*', 'put': 'put[a-z]*',
+        'cut': 'cut[a-z]*', 'stand': 'st[a-z]+', 'speed': 'sp[a-z]+', 'bear': 'b[a-z]+',
+        'keep': 'k[a-z]+', 'hold': 'h[a-z]+', 'write': 'w[a-z]+', 'read': 'r[a-z]+',
+        'meet': 'm[a-z]+', 'mean': 'm[a-z]+', 'hear': 'h[a-z]+', 'see': 's[a-z]+',
+        'grow': 'g[a-z]+', 'know': 'k[a-z]+', 'understand': 'u[a-z]+', 'spend': 's[a-z]+',
+        'win': 'w[a-z]+', 'let': 'let[a-z]*', 'begin': 'b[a-z]+', 'break': 'b[a-z]+',
+        'quit': 'quit[a-z]*', 'cost': 'cost[a-z]*', 'hit': 'hit[a-z]*', 'hurt': 'hurt[a-z]*',
+        'shut': 'shut[a-z]*', 'split': 'split[a-z]*', 'spread': 'spread[a-z]*'
+      };
+      
+      if (irregulars[firstWord]) {
+        p = irregulars[firstWord] + p.substring(firstWord.length);
+      } else {
+        p = firstWord + '[a-z]*' + p.substring(firstWord.length);
+      }
     }
-    return part;
-  });
+    return p;
+  };
+
+  const p1Regex = buildRegexStr(phrase1);
+  const p2Regex = buildRegexStr(phrase2);
+  
+  try {
+    const regex = new RegExp(`(${p1Regex}|${p2Regex})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) => {
+      if (part.match(new RegExp(`^(${p1Regex}|${p2Regex})$`, 'i'))) {
+        return <strong key={i} className="text-black font-bold bg-gray-200 px-1.5 py-0.5 rounded-md mx-0.5">{part}</strong>;
+      }
+      return part;
+    });
+  } catch (e) {
+    return text;
+  }
 };
 
 export default function MatchingGame() {
