@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, BookOpen, MessageCircle, X } from "lucide-react";
+import { CheckCircle2, BookOpen, MessageCircle, X, Volume2 } from "lucide-react";
 import { IELTS_WORDS } from "@/data/ieltsWords";
 import { IELTS_PHRASES, PhrasePair } from "@/data/ieltsPhrases";
+import SentenceForge from "./SentenceForge";
 
 // Types
 type GameItem = {
@@ -18,6 +19,15 @@ type PairData = {
   id: string;
   left: string;
   right: string;
+};
+
+type GameProgress = {
+  allPairs: PairData[];
+  currentStage: number;
+  matchedPairs: string[];
+  leftItems: GameItem[];
+  rightItems: GameItem[];
+  wordPool: PairData[];
 };
 
 // Helper: Shuffle array
@@ -40,6 +50,74 @@ const speakText = (text: string, lang: string) => {
     // Adjust rate slightly for better clarity if needed
     utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
+  }
+};
+
+// Helper: Play success sound
+const playSuccessSound = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    const playOscillator = (freq: number, startTime: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + startTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+
+    // Play a nice two-tone chime (e.g., C5 followed by G5)
+    playOscillator(523.25, 0, 0.3); // C5
+    playOscillator(783.99, 0.1, 0.5); // G5
+  } catch (e) {
+    console.error("Audio playback failed", e);
+  }
+};
+
+// Helper: Play error sound
+const playErrorSound = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    const playOscillator = (freq: number, type: OscillatorType, startTime: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+
+    // Play a low "uh-oh" double beep
+    playOscillator(150, 'square', 0, 0.15);
+    playOscillator(100, 'square', 0.15, 0.2);
+  } catch (e) {
+    console.error("Audio playback failed", e);
   }
 };
 
@@ -113,7 +191,7 @@ export default function MatchingGame() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState<any>(null);
   
-  const [gameMode, setGameMode] = useState<"words" | "phrases">("words");
+  const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences">("words");
   const [allPairs, setAllPairs] = useState<PairData[]>([]);
   const [currentStage, setCurrentStage] = useState(1);
   const [wordPool, setWordPool] = useState<PairData[]>([]);
@@ -154,7 +232,33 @@ export default function MatchingGame() {
     setIsProcessing(false);
   };
 
-  const startFullGame = (mode: "words" | "phrases") => {
+  const startFullGame = (mode: "words" | "phrases" | "sentences", forceFresh = false) => {
+    if (mode === "sentences") return; // Handled by SentenceForge component
+
+    if (!forceFresh) {
+      const saved = localStorage.getItem(`ielts_game_progress_${mode}`);
+      if (saved) {
+        try {
+          const progress: GameProgress = JSON.parse(saved);
+          setAllPairs(progress.allPairs);
+          setCurrentStage(progress.currentStage);
+          setMatchedPairs(new Set(progress.matchedPairs));
+          setLeftItems(progress.leftItems);
+          setRightItems(progress.rightItems);
+          setWordPool(progress.wordPool);
+          
+          setSelectedLeft(null);
+          setSelectedRight(null);
+          setErrorPair(null);
+          setSuccessPair(null);
+          setIsProcessing(false);
+          return;
+        } catch (e) {
+          console.error("Failed to parse saved progress", e);
+        }
+      }
+    }
+
     let sourceData: PairData[];
     if (mode === "words") {
       sourceData = IELTS_WORDS.map(w => ({ id: w.id, left: w.english, right: w.chinese }));
@@ -172,6 +276,22 @@ export default function MatchingGame() {
     setIsMounted(true);
     startFullGame(gameMode);
   }, [gameMode]);
+
+  // Save progress
+  useEffect(() => {
+    if (!isMounted || allPairs.length === 0) return;
+    
+    const progress: GameProgress = {
+      allPairs,
+      currentStage,
+      matchedPairs: Array.from(matchedPairs),
+      leftItems,
+      rightItems,
+      wordPool,
+    };
+    
+    localStorage.setItem(`ielts_game_progress_${gameMode}`, JSON.stringify(progress));
+  }, [gameMode, allPairs, currentStage, matchedPairs, leftItems, rightItems, wordPool, isMounted]);
 
   if (!isMounted) {
     return null; // Avoid hydration mismatch
@@ -220,6 +340,7 @@ export default function MatchingGame() {
 
     if (leftItem?.pairId === rightItem?.pairId) {
       // Match successful
+      playSuccessSound();
       setSuccessPair({ left: leftId, right: rightId });
       setTimeout(() => {
         if (gameMode === "phrases") {
@@ -231,6 +352,7 @@ export default function MatchingGame() {
       }, 500);
     } else {
       // Match failed
+      playErrorSound();
       setErrorPair({ left: leftId, right: rightId });
       setTimeout(() => {
         if (gameMode === "phrases") {
@@ -300,11 +422,11 @@ export default function MatchingGame() {
 
   return (
     <div className="w-full max-w-3xl mx-auto p-6">
-      <div className="text-center mb-10">
+      <div className={`text-center ${gameMode === "sentences" ? "" : "mb-10"}`}>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">雅思词汇消消乐</h1>
         
         {/* Tabs */}
-        <div className="flex justify-center gap-4 mb-8">
+        <div className="flex justify-center gap-4 mb-8 flex-wrap">
           <button
             onClick={() => setGameMode("words")}
             className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
@@ -327,12 +449,25 @@ export default function MatchingGame() {
             <MessageCircle className="w-5 h-5" />
             雅思短语同义替换
           </button>
+          <button
+            onClick={() => setGameMode("sentences")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
+              gameMode === "sentences" 
+                ? "bg-amber-500 text-white shadow-md" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            <span className="text-xl leading-none">✨</span>
+            长难句锻造场
+          </button>
         </div>
 
         <p className="text-gray-500">
-          {gameMode === "words" ? "点击左侧英文和右侧中文进行配对" : "点击左侧和右侧的同义短语进行配对"}
+          {gameMode === "words" ? "点击左侧英文和右侧中文进行配对" : 
+           gameMode === "phrases" ? "点击左侧和右侧的同义短语进行配对" : 
+           "点击下方的词块，按顺序拼出完整的句子"}
         </p>
-        {wordPool.length > 0 && (
+        {gameMode !== "sentences" && wordPool.length > 0 && (
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold shadow-sm">
               阶段 {currentStage} / {TOTAL_STAGES}
@@ -344,7 +479,9 @@ export default function MatchingGame() {
         )}
       </div>
 
-      {isGameComplete ? (
+      {gameMode === "sentences" ? (
+        <SentenceForge />
+      ) : isGameComplete ? (
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -355,7 +492,7 @@ export default function MatchingGame() {
           </div>
           <h2 className="text-2xl font-bold text-green-700 mb-6">太棒了！你完成了所有 {allPairs.length} 个{gameMode === "words" ? "单词" : "短语"}！</h2>
           <button 
-            onClick={() => startFullGame(gameMode)}
+            onClick={() => startFullGame(gameMode, true)}
             className="px-8 py-3 bg-green-500 text-white rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
           >
             重新开始
@@ -516,9 +653,16 @@ export default function MatchingGame() {
                           <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">IELTS Examples</h3>
                           <ul className="space-y-3">
                             {phraseData.examples.map((ex, idx) => (
-                              <li key={idx} className="flex gap-3 text-gray-700 bg-gray-50 p-3 rounded-xl leading-relaxed">
-                                <span className="font-bold text-blue-500 shrink-0">{idx + 1}.</span>
-                                <span className="font-medium">{highlightPhrase(ex, phraseData.phrase1, phraseData.phrase2)}</span>
+                              <li key={idx} className="flex items-start gap-3 text-gray-700 bg-gray-50 p-3 rounded-xl leading-relaxed">
+                                <span className="font-bold text-blue-500 shrink-0 mt-0.5">{idx + 1}.</span>
+                                <span className="font-medium flex-1">{highlightPhrase(ex, phraseData.phrase1, phraseData.phrase2)}</span>
+                                <button 
+                                  onClick={() => speakText(ex, "en-US")}
+                                  className="shrink-0 text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-100 active:scale-95"
+                                  title="播放例句"
+                                >
+                                  <Volume2 className="w-5 h-5" />
+                                </button>
                               </li>
                             ))}
                           </ul>
@@ -555,7 +699,7 @@ export default function MatchingGame() {
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 1.5, delay: 0.2 }}
+                              transition={{ duration: 0.4, delay: 0.5 }}
                               className="text-red-700 bg-red-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {leftPhrase.phrase1}
@@ -563,7 +707,7 @@ export default function MatchingGame() {
                             <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 1.5, delay: 0.6 }}
+                              transition={{ duration: 0.4, delay: 0.5 }}
                               className="text-green-700 bg-green-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {leftPhrase.phrase2}
@@ -573,9 +717,16 @@ export default function MatchingGame() {
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {leftPhrase.meaningEn}</p>
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">翻译:</span> {leftPhrase.meaningZh}</p>
                           </div>
-                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed font-medium">
-                            <span className="font-semibold text-blue-500">Example: </span>
-                            {highlightPhrase(leftPhrase.examples[0], leftPhrase.phrase1, leftPhrase.phrase2)}
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed font-medium flex items-start gap-2">
+                            <span className="font-semibold text-blue-500 shrink-0 mt-0.5">Example: </span>
+                            <span className="flex-1">{highlightPhrase(leftPhrase.examples[0], leftPhrase.phrase1, leftPhrase.phrase2)}</span>
+                            <button 
+                              onClick={() => speakText(leftPhrase.examples[0], "en-US")}
+                              className="shrink-0 text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-50 active:scale-95"
+                              title="播放例句"
+                            >
+                              <Volume2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
 
@@ -584,7 +735,7 @@ export default function MatchingGame() {
                           <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-800 mb-3">
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 1.5, delay: 1.0 }}
+                              transition={{ duration: 0.4, delay: 1.0 }}
                               className="text-red-700 bg-red-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {rightPhrase.phrase2}
@@ -592,7 +743,7 @@ export default function MatchingGame() {
                             <span className="text-gray-500 text-sm font-normal">同义词应为:</span>
                             <motion.span 
                               animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 1.5, delay: 1.4 }}
+                              transition={{ duration: 0.4, delay: 1.0 }}
                               className="text-green-700 bg-green-100 px-2 py-1 rounded-lg inline-block"
                             >
                               {rightPhrase.phrase1}
@@ -602,9 +753,16 @@ export default function MatchingGame() {
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">Meaning:</span> {rightPhrase.meaningEn}</p>
                             <p className="text-black font-bold"><span className="font-semibold text-gray-500">翻译:</span> {rightPhrase.meaningZh}</p>
                           </div>
-                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed font-medium">
-                            <span className="font-semibold text-blue-500">Example: </span>
-                            {highlightPhrase(rightPhrase.examples[0], rightPhrase.phrase1, rightPhrase.phrase2)}
+                          <div className="text-sm text-gray-600 bg-white/60 p-3 rounded-xl leading-relaxed font-medium flex items-start gap-2">
+                            <span className="font-semibold text-blue-500 shrink-0 mt-0.5">Example: </span>
+                            <span className="flex-1">{highlightPhrase(rightPhrase.examples[0], rightPhrase.phrase1, rightPhrase.phrase2)}</span>
+                            <button 
+                              onClick={() => speakText(rightPhrase.examples[0], "en-US")}
+                              className="shrink-0 text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-50 active:scale-95"
+                              title="播放例句"
+                            >
+                              <Volume2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       </div>
