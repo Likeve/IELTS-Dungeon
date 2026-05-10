@@ -21,13 +21,27 @@ const shuffle = <T,>(array: T[]): T[] => {
   return newArray;
 };
 
+// Singleton AudioContext for mobile compatibility
+let audioCtx: AudioContext | null = null;
+const getAudioContext = () => {
+  if (typeof window === "undefined") return null;
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+};
+
 // Helper: Play success sound
 const playSuccessSound = () => {
-  if (typeof window === "undefined") return;
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const playOscillator = (freq: number, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -47,11 +61,9 @@ const playSuccessSound = () => {
 };
 
 const playErrorSound = () => {
-  if (typeof window === "undefined") return;
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const playOscillator = (freq: number, type: OscillatorType, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();

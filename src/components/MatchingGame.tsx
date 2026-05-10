@@ -43,23 +43,49 @@ const shuffle = <T,>(array: T[]): T[] => {
 // Helper: Play text-to-speech audio
 const speakText = (text: string, lang: string) => {
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    // Cancel any ongoing speech to avoid queuing up too many sounds
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
-    // Adjust rate slightly for better clarity if needed
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+    // Fix for Android Chrome: cancelling immediately before speaking can cancel the new utterance too
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    }
+    
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = 0.9;
+      
+      // Force an English voice if available (helps on some Android devices)
+      const voices = window.speechSynthesis.getVoices();
+      const enVoice = voices.find(v => v.lang.includes('en-') || v.lang.includes('en_') || v.lang === 'en');
+      if (enVoice) {
+        utterance.voice = enVoice;
+      }
+      
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   }
+};
+
+// Singleton AudioContext for mobile compatibility
+let audioCtx: AudioContext | null = null;
+const getAudioContext = () => {
+  if (typeof window === "undefined") return null;
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
 };
 
 // Helper: Play success sound
 const playSuccessSound = () => {
-  if (typeof window === "undefined") return;
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
     const playOscillator = (freq: number, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
@@ -89,11 +115,9 @@ const playSuccessSound = () => {
 
 // Helper: Play error sound
 const playErrorSound = () => {
-  if (typeof window === "undefined") return;
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
     const playOscillator = (freq: number, type: OscillatorType, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
