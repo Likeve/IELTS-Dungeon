@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { IELTS_SENTENCES, Chunk } from "@/data/ieltsSentences";
+import { speakText } from "@/lib/speech";
 
 type ChunkWithId = Chunk & { id: string };
 
@@ -126,6 +127,8 @@ export default function SentenceForge() {
   }, [currentStage, isMounted]);
 
   const handleChunkClick = (clickedChunk: ChunkWithId) => {
+    speakText(clickedChunk.text, "en-US");
+
     const expectedChunkText = currentSentence.chunks[placedChunks.length].text;
     
     if (clickedChunk.text === expectedChunkText) {
@@ -207,8 +210,9 @@ export default function SentenceForge() {
           <div className="w-full bg-white/60 backdrop-blur-sm rounded-3xl p-6 min-h-[200px] border-2 border-dashed border-blue-200 shadow-inner flex flex-wrap content-start gap-3">
             <AnimatePresence>
               {placedChunks.map((chunk) => (
-                <motion.div
+                <motion.button
                   key={chunk.id}
+                  type="button"
                   layoutId={chunk.id}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ 
@@ -216,7 +220,8 @@ export default function SentenceForge() {
                     scale: 1,
                     boxShadow: "0 0 20px rgba(251, 191, 36, 0.5)"
                   }}
-                  className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl text-lg font-bold bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-300 text-amber-900"
+                  onClick={() => speakText(chunk.text, "en-US")}
+                  className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl text-lg font-bold bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-300 text-amber-900 cursor-pointer text-center active:scale-[0.98]"
                 >
                   <span>{chunk.text}</span>
                   <motion.span 
@@ -226,7 +231,7 @@ export default function SentenceForge() {
                   >
                     {chunk.meaning}
                   </motion.span>
-                </motion.div>
+                </motion.button>
               ))}
             </AnimatePresence>
             {placedChunks.length === 0 && (

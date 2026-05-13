@@ -6,6 +6,7 @@ import { CheckCircle2, BookOpen, MessageCircle, X, Volume2 } from "lucide-react"
 import { IELTS_WORDS } from "@/data/ieltsWords";
 import { IELTS_PHRASES, PhrasePair } from "@/data/ieltsPhrases";
 import SentenceForge from "./SentenceForge";
+import { speakText } from "@/lib/speech";
 
 // Types
 type GameItem = {
@@ -38,31 +39,6 @@ const shuffle = <T,>(array: T[]): T[] => {
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
   }
   return newArray;
-};
-
-// Helper: Play text-to-speech audio
-const speakText = (text: string, lang: string) => {
-  if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    // Fix for Android Chrome: cancelling immediately before speaking can cancel the new utterance too
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-    }
-    
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang;
-      utterance.rate = 0.9;
-      
-      // Force an English voice if available (helps on some Android devices)
-      const voices = window.speechSynthesis.getVoices();
-      const enVoice = voices.find(v => v.lang.includes('en-') || v.lang.includes('en_') || v.lang === 'en');
-      if (enVoice) {
-        utterance.voice = enVoice;
-      }
-      
-      window.speechSynthesis.speak(utterance);
-    }, 50);
-  }
 };
 
 // Singleton AudioContext for mobile compatibility
