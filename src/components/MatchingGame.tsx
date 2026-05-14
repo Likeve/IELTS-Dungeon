@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, BookOpen, MessageCircle, X, Volume2 } from "lucide-react";
+import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones } from "lucide-react";
 import { IELTS_WORDS } from "@/data/ieltsWords";
 import { IELTS_PHRASES, PhrasePair } from "@/data/ieltsPhrases";
 import SentenceForge from "./SentenceForge";
+import DictationGame from "./DictationGame";
 import { speakText } from "@/lib/speech";
 
 // Types
@@ -191,7 +192,7 @@ export default function MatchingGame() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState<any>(null);
   
-  const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences">("words");
+  const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences" | "dictation">("words");
   const [allPairs, setAllPairs] = useState<PairData[]>([]);
   const [currentStage, setCurrentStage] = useState(1);
   const [wordPool, setWordPool] = useState<PairData[]>([]);
@@ -232,8 +233,8 @@ export default function MatchingGame() {
     setIsProcessing(false);
   };
 
-  const startFullGame = (mode: "words" | "phrases" | "sentences", forceFresh = false) => {
-    if (mode === "sentences") return; // Handled by SentenceForge component
+  const startFullGame = (mode: "words" | "phrases" | "sentences" | "dictation", forceFresh = false) => {
+    if (mode === "sentences" || mode === "dictation") return;
 
     if (!forceFresh) {
       const saved = localStorage.getItem(`ielts_game_progress_${mode}`);
@@ -271,15 +272,17 @@ export default function MatchingGame() {
     loadStage(1, shuffledAll);
   };
 
-  // Initialize game
+  // Initialize game (matching modes only — avoids empty state when switching tabs)
   useEffect(() => {
     setIsMounted(true);
-    startFullGame(gameMode);
+    if (gameMode === "words" || gameMode === "phrases") {
+      startFullGame(gameMode);
+    }
   }, [gameMode]);
 
-  // Save progress
+  // Save progress (words / phrases only)
   useEffect(() => {
-    if (!isMounted || allPairs.length === 0) return;
+    if (!isMounted || gameMode === "sentences" || gameMode === "dictation" || allPairs.length === 0) return;
     
     const progress: GameProgress = {
       allPairs,
@@ -308,7 +311,7 @@ export default function MatchingGame() {
     // For "words" mode, only left side (English) is spoken.
     // For "phrases" mode, both sides (English) are spoken.
     if (gameMode === "phrases" || item.type === "left") {
-      speakText(item.text, "en-US");
+      speakText(item.text);
     }
 
     if (item.type === "left") {
@@ -422,7 +425,7 @@ export default function MatchingGame() {
 
   return (
     <div className="w-full max-w-3xl mx-auto p-6">
-      <div className={`text-center ${gameMode === "sentences" ? "" : "mb-10"}`}>
+      <div className={`text-center ${gameMode === "sentences" || gameMode === "dictation" ? "" : "mb-10"}`}>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">雅思词汇消消乐</h1>
         
         {/* Tabs */}
@@ -460,14 +463,26 @@ export default function MatchingGame() {
             <span className="text-xl leading-none">✨</span>
             长难句锻造场
           </button>
+          <button
+            onClick={() => setGameMode("dictation")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
+              gameMode === "dictation" 
+                ? "bg-teal-600 text-white shadow-md" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            <Headphones className="w-5 h-5" />
+            听写作文
+          </button>
         </div>
 
         <p className="text-gray-500">
           {gameMode === "words" ? "点击左侧英文和右侧中文进行配对" : 
            gameMode === "phrases" ? "点击左侧和右侧的同义短语进行配对" : 
-           "点击下方的词块，按顺序拼出完整的句子"}
+           gameMode === "sentences" ? "点击下方的词块，按顺序拼出完整的句子" :
+           "听 AI 朗读范文，盲打全文后提交对比与评星"}
         </p>
-        {gameMode !== "sentences" && wordPool.length > 0 && (
+        {gameMode !== "sentences" && gameMode !== "dictation" && wordPool.length > 0 && (
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold shadow-sm">
               阶段 {currentStage} / {TOTAL_STAGES}
@@ -481,6 +496,8 @@ export default function MatchingGame() {
 
       {gameMode === "sentences" ? (
         <SentenceForge />
+      ) : gameMode === "dictation" ? (
+        <DictationGame />
       ) : isGameComplete ? (
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
@@ -657,7 +674,7 @@ export default function MatchingGame() {
                                 <span className="font-bold text-blue-500 shrink-0 mt-0.5">{idx + 1}.</span>
                                 <span className="font-medium flex-1">{highlightPhrase(ex, phraseData.phrase1, phraseData.phrase2)}</span>
                                 <button 
-                                  onClick={() => speakText(ex, "en-US")}
+                                  onClick={() => speakText(ex)}
                                   className="shrink-0 text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-100 active:scale-95"
                                   title="播放例句"
                                 >
@@ -721,7 +738,7 @@ export default function MatchingGame() {
                             <span className="font-semibold text-blue-500 shrink-0 mt-0.5">Example: </span>
                             <span className="flex-1">{highlightPhrase(leftPhrase.examples[0], leftPhrase.phrase1, leftPhrase.phrase2)}</span>
                             <button 
-                              onClick={() => speakText(leftPhrase.examples[0], "en-US")}
+                              onClick={() => speakText(leftPhrase.examples[0])}
                               className="shrink-0 text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-50 active:scale-95"
                               title="播放例句"
                             >
@@ -757,7 +774,7 @@ export default function MatchingGame() {
                             <span className="font-semibold text-blue-500 shrink-0 mt-0.5">Example: </span>
                             <span className="flex-1">{highlightPhrase(rightPhrase.examples[0], rightPhrase.phrase1, rightPhrase.phrase2)}</span>
                             <button 
-                              onClick={() => speakText(rightPhrase.examples[0], "en-US")}
+                              onClick={() => speakText(rightPhrase.examples[0])}
                               className="shrink-0 text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-full hover:bg-blue-50 active:scale-95"
                               title="播放例句"
                             >

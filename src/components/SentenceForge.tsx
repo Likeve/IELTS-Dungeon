@@ -127,7 +127,7 @@ export default function SentenceForge() {
   }, [currentStage, isMounted]);
 
   const handleChunkClick = (clickedChunk: ChunkWithId) => {
-    speakText(clickedChunk.text, "en-US");
+    speakText(clickedChunk.text);
 
     const expectedChunkText = currentSentence.chunks[placedChunks.length].text;
     
@@ -220,7 +220,7 @@ export default function SentenceForge() {
                     scale: 1,
                     boxShadow: "0 0 20px rgba(251, 191, 36, 0.5)"
                   }}
-                  onClick={() => speakText(chunk.text, "en-US")}
+                  onClick={() => speakText(chunk.text)}
                   className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl text-lg font-bold bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-300 text-amber-900 cursor-pointer text-center active:scale-[0.98]"
                 >
                   <span>{chunk.text}</span>
