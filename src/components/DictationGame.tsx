@@ -12,7 +12,7 @@ import {
   Check,
   X,
   SkipForward,
-  ChevronRight,
+  Settings,
 } from "lucide-react";
 import {
   DICTATION_LEVELS,
@@ -36,6 +36,14 @@ function accuracyToStars(accuracy: number): number {
   if (accuracy >= 80) return 2;
   if (accuracy >= 65) return 1;
   return 0;
+}
+
+function stripPunctuation(s: string): string {
+  return s.replace(/[.,!?;:'"()\[\]{}\u2018\u2019\u201c\u201d\u2013\u2014\u2026]/g, "");
+}
+
+function isChunkMatch(expected: string, user: string): boolean {
+  return stripPunctuation(expected).toLowerCase() === stripPunctuation(user).toLowerCase();
 }
 
 type ChunkResult = {
@@ -83,14 +91,15 @@ export default function DictationGame() {
   const [streak95, setStreak95] = useState(0);
   const [showGoldToast, setShowGoldToast] = useState(false);
   const [ttsVoice, setTTSVoiceState] = useState("en-US");
+  const [rate, setRate] = useState(1.0);
 
   const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
   const [input, setInput] = useState("");
   const [chunkResults, setChunkResults] = useState<ChunkResult[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [showChunkHint, setShowChunkHint] = useState(false);
   const [showChinese, setShowChinese] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [chunkTranslations, setChunkTranslations] = useState<Record<number, string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -172,7 +181,6 @@ export default function DictationGame() {
     setCurrentChunkIndex(savedProgress.currentChunkIndex);
     setChunkResults(savedProgress.chunkResults);
     setInput("");
-    setFeedback(null);
     setShowChunkHint(false);
     loopRef.current = false;
     stopSpeech();
@@ -204,7 +212,6 @@ export default function DictationGame() {
     setCurrentChunkIndex(0);
     setInput("");
     setChunkResults([]);
-    setFeedback(null);
     setShowChunkHint(false);
     loopRef.current = false;
     stopSpeech();
@@ -221,14 +228,14 @@ export default function DictationGame() {
       stopSpeech();
       setIsPlaying(true);
       try {
-        await speakText(chunk);
+        await speakText(chunk, rate);
       } catch {}
       setIsPlaying(false);
       if (!loopRef.current) break;
       await new Promise((r) => setTimeout(r, 600));
     }
     setIsPlaying(false);
-  }, []);
+  }, [rate]);
 
   useEffect(() => {
     if (phase !== "play" || chunks.length === 0) return;
@@ -239,7 +246,7 @@ export default function DictationGame() {
       clearTimeout(timer);
       loopRef.current = false;
     };
-  }, [phase, currentChunkIndex, chunks, loopKey]);
+  }, [phase, currentChunkIndex, chunks, loopKey, rate]);
 
   const togglePlayback = () => {
     if (isPlaying) {
@@ -255,14 +262,10 @@ export default function DictationGame() {
     if (!input.trim()) return;
     const trimmed = input.trim();
     const expected = currentChunk;
-    const correct = trimmed.toLowerCase() === expected.toLowerCase();
+    const correct = isChunkMatch(expected, trimmed);
 
-    setFeedback(correct ? "correct" : "wrong");
     setChunkResults((prev) => [...prev, { expected, user: trimmed, correct }]);
-
-    if (correct) {
-      setTimeout(() => advanceToNext(true), 180);
-    }
+    advanceToNext(correct);
   };
 
   const advanceToNext = (wasCorrect: boolean) => {
@@ -276,7 +279,6 @@ export default function DictationGame() {
     }
     setCurrentChunkIndex(nextIndex);
     setInput("");
-    setFeedback(null);
     setShowChunkHint(false);
     inputRef.current?.focus();
   };
@@ -289,10 +291,6 @@ export default function DictationGame() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (feedback === "wrong") {
-        advanceToNext(false);
-        return;
-      }
       submitChunk();
       return;
     }
@@ -366,7 +364,6 @@ export default function DictationGame() {
     setCurrentChunkIndex(0);
     setInput("");
     setChunkResults([]);
-    setFeedback(null);
   };
 
   const replaySame = () => {
@@ -377,7 +374,6 @@ export default function DictationGame() {
     setCurrentChunkIndex(0);
     setInput("");
     setChunkResults([]);
-    setFeedback(null);
     setShowChunkHint(false);
     setPhase("play");
   };
@@ -407,9 +403,64 @@ export default function DictationGame() {
         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
           95%+ 连胜 {streak95}/3
         </span>
+        <button
+          type="button"
+          onClick={() => setShowSettings((v) => !v)}
+          className={`p-1.5 rounded-full transition-all ${
+            showSettings ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+          }`}
+          title="设置"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
       </div>
 
       <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">口音</span>
+                <select
+                  value={ttsVoice}
+                  onChange={(e) => handleTTSVoiceChange(e.target.value)}
+                  className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                >
+                  {TTS_VOICES.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">语速</span>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={goldMode && goldUnlocked ? 2.5 : 2.0}
+                  step={0.1}
+                  value={rate}
+                  onChange={(e) => setRate(parseFloat(e.target.value))}
+                  className="flex-1 accent-teal-600"
+                />
+                <span className="text-sm font-mono text-gray-700 w-10">{rate}x</span>
+              </div>
+              {goldUnlocked && (
+                <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-yellow-900 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2 w-fit">
+                  <input type="checkbox" checked={goldMode} onChange={(e) => setGoldMode(e.target.checked)} />
+                  Gold 模式（更快语速）
+                </label>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {showGoldToast && (
           <motion.div
             initial={{ opacity: 0, y: -12 }}
@@ -654,27 +705,18 @@ export default function DictationGame() {
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                if (feedback) setFeedback(null);
-              }}
+              onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               spellCheck={false}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
               placeholder={`输入你听到的语块，按 Enter 提交…`}
-              className={`w-full rounded-xl border-2 bg-white px-5 py-4 text-lg font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all ${
-                feedback === "correct"
-                  ? "border-emerald-400 focus:ring-emerald-300 bg-emerald-50/50"
-                  : feedback === "wrong"
-                    ? "border-rose-400 focus:ring-rose-300 bg-rose-50/50"
-                    : "border-gray-200 focus:ring-teal-400"
-              }`}
+              className="w-full rounded-xl border-2 border-gray-200 bg-white px-5 py-4 text-lg font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all"
               autoFocus
             />
 
-            {prediction && !feedback && (
+            {prediction && (
               <span className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-lg font-mono text-gray-300">
                 <span className="opacity-0">{input}</span>
                 {prediction}
@@ -694,23 +736,12 @@ export default function DictationGame() {
             <button
               type="button"
               onClick={submitChunk}
-              disabled={!input.trim() || feedback !== null}
+              disabled={!input.trim()}
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               <Check className="w-5 h-5" />
               提交
             </button>
-
-            {feedback === "wrong" && (
-              <button
-                type="button"
-                onClick={() => advanceToNext(false)}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold bg-rose-500 text-white hover:bg-rose-600 animate-in fade-in"
-              >
-                <ChevronRight className="w-5 h-5" />
-                看下一块
-              </button>
-            )}
 
             <button
               type="button"
@@ -741,34 +772,6 @@ export default function DictationGame() {
               返回选题
             </button>
           </div>
-
-          <details className="rounded-2xl border border-gray-200 bg-white p-4">
-            <summary className="font-bold cursor-pointer text-gray-700 flex items-center gap-2 text-sm">
-              更多设置
-            </summary>
-            <div className="mt-3 space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">口音</span>
-                <select
-                  value={ttsVoice}
-                  onChange={(e) => handleTTSVoiceChange(e.target.value)}
-                  className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                >
-                  {TTS_VOICES.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {goldUnlocked && (
-                <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-yellow-900 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2 w-fit">
-                  <input type="checkbox" checked={goldMode} onChange={(e) => setGoldMode(e.target.checked)} />
-                  Gold 模式（更快语速）
-                </label>
-              )}
-            </div>
-          </details>
 
         </div>
       )}

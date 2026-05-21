@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones } from "lucide-react";
+import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones, PenLine } from "lucide-react";
 import { IELTS_WORDS } from "@/data/ieltsWords";
 import { IELTS_PHRASES, PhrasePair } from "@/data/ieltsPhrases";
 import SentenceForge from "./SentenceForge";
 import DictationGame from "./DictationGame";
+import WritingForge from "./WritingForge";
 import { speakText } from "@/lib/speech";
 
 // Types
@@ -192,7 +193,7 @@ export default function MatchingGame() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState<any>(null);
   
-  const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences" | "dictation">("words");
+  const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences" | "dictation" | "writing">("words");
   const [allPairs, setAllPairs] = useState<PairData[]>([]);
   const [currentStage, setCurrentStage] = useState(1);
   const [wordPool, setWordPool] = useState<PairData[]>([]);
@@ -233,8 +234,8 @@ export default function MatchingGame() {
     setIsProcessing(false);
   };
 
-  const startFullGame = (mode: "words" | "phrases" | "sentences" | "dictation", forceFresh = false) => {
-    if (mode === "sentences" || mode === "dictation") return;
+  const startFullGame = (mode: "words" | "phrases" | "sentences" | "dictation" | "writing", forceFresh = false) => {
+    if (mode === "sentences" || mode === "dictation" || mode === "writing") return;
 
     if (!forceFresh) {
       const saved = localStorage.getItem(`ielts_game_progress_${mode}`);
@@ -282,7 +283,7 @@ export default function MatchingGame() {
 
   // Save progress (words / phrases only)
   useEffect(() => {
-    if (!isMounted || gameMode === "sentences" || gameMode === "dictation" || allPairs.length === 0) return;
+    if (!isMounted || gameMode === "sentences" || gameMode === "dictation" || gameMode === "writing" || allPairs.length === 0) return;
     
     const progress: GameProgress = {
       allPairs,
@@ -424,8 +425,8 @@ export default function MatchingGame() {
   const isGameComplete = isStageComplete && currentStage === TOTAL_STAGES;
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6">
-      <div className={`text-center ${gameMode === "sentences" || gameMode === "dictation" ? "" : "mb-10"}`}>
+    <div className={`w-full mx-auto p-6 ${gameMode === "writing" ? "max-w-6xl" : "max-w-3xl"}`}>
+      <div className={`text-center ${gameMode === "sentences" || gameMode === "dictation" || gameMode === "writing" ? "" : "mb-10"}`}>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">雅思词汇消消乐</h1>
         
         {/* Tabs */}
@@ -474,15 +475,27 @@ export default function MatchingGame() {
             <Headphones className="w-5 h-5" />
             听写作文
           </button>
+          <button
+            onClick={() => setGameMode("writing")}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
+              gameMode === "writing" 
+                ? "bg-violet-500 text-white shadow-md" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            <PenLine className="w-5 h-5" />
+            写作训练场
+          </button>
         </div>
 
         <p className="text-gray-500">
           {gameMode === "words" ? "点击左侧英文和右侧中文进行配对" : 
            gameMode === "phrases" ? "点击左侧和右侧的同义短语进行配对" : 
            gameMode === "sentences" ? "点击下方的词块，按顺序拼出完整的句子" :
-           "听 AI 朗读范文，盲打全文后提交对比与评星"}
+           gameMode === "dictation" ? "听 AI 朗读范文，盲打全文后提交对比与评星" :
+           "激活思维节点，实时评分反馈，快速提升写作能力"}
         </p>
-        {gameMode !== "sentences" && gameMode !== "dictation" && wordPool.length > 0 && (
+        {gameMode !== "sentences" && gameMode !== "dictation" && gameMode !== "writing" && wordPool.length > 0 && (
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold shadow-sm">
               阶段 {currentStage} / {TOTAL_STAGES}
@@ -498,6 +511,8 @@ export default function MatchingGame() {
         <SentenceForge />
       ) : gameMode === "dictation" ? (
         <DictationGame />
+      ) : gameMode === "writing" ? (
+        <WritingForge />
       ) : isGameComplete ? (
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}

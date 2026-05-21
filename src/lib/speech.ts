@@ -51,10 +51,11 @@ async function fetchCloudAudio(text: string, voice: string): Promise<string | nu
   }
 }
 
-function playAudio(url: string): Promise<void> {
+function playAudio(url: string, rate = 1.0): Promise<void> {
   return new Promise((resolve) => {
     stopSpeech();
     const audio = new Audio(url);
+    audio.playbackRate = rate;
     activeAudio = audio;
 
     audio.onended = () => {
@@ -77,11 +78,11 @@ function playAudio(url: string): Promise<void> {
   });
 }
 
-export async function speakText(text: string): Promise<void> {
+export async function speakText(text: string, rate = 1.0): Promise<void> {
   const voice = getTTSVoice();
   const url = await fetchCloudAudio(text, voice);
   if (url) {
-    await playAudio(url);
+    await playAudio(url, rate);
   }
 }
 
