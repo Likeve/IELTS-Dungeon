@@ -126,15 +126,20 @@ export default function SentenceForge() {
     localStorage.setItem('ielts_forge_progress', JSON.stringify({ currentStage }));
   }, [currentStage, isMounted]);
 
-  const handleChunkClick = (clickedChunk: ChunkWithId) => {
-    speakText(clickedChunk.text);
+  const isStageComplete = placedChunks.length === currentSentence.chunks.length;
+  const isGameComplete = isStageComplete && currentStage === TOTAL_STAGES;
 
+  const handleChunkClick = (clickedChunk: ChunkWithId) => {
     const expectedChunkText = currentSentence.chunks[placedChunks.length].text;
+    const isLastChunk = placedChunks.length + 1 === currentSentence.chunks.length;
     
     if (clickedChunk.text === expectedChunkText) {
       playSuccessSound();
       setPlacedChunks(prev => [...prev, clickedChunk]);
       setAvailableChunks(prev => prev.filter(c => c.id !== clickedChunk.id));
+      if (isLastChunk) {
+        speakText(currentSentence.english);
+      }
     } else {
       playErrorSound();
       setErrorChunkId(clickedChunk.id);
@@ -143,9 +148,6 @@ export default function SentenceForge() {
   };
 
   if (!isMounted) return null;
-
-  const isStageComplete = placedChunks.length === currentSentence.chunks.length;
-  const isGameComplete = isStageComplete && currentStage === TOTAL_STAGES;
 
   const handleNextStage = () => {
     setCurrentStage(prev => prev + 1);
@@ -220,8 +222,7 @@ export default function SentenceForge() {
                     scale: 1,
                     boxShadow: "0 0 20px rgba(251, 191, 36, 0.5)"
                   }}
-                  onClick={() => speakText(chunk.text)}
-                  className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl text-lg font-bold bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-300 text-amber-900 cursor-pointer text-center active:scale-[0.98]"
+                  className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl text-lg font-bold bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-300 text-amber-900 text-center"
                 >
                   <span>{chunk.text}</span>
                   <motion.span 

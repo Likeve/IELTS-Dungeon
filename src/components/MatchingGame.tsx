@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones, PenLine } from "lucide-react";
+import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones, PenLine, ArrowLeft, Sparkles } from "lucide-react";
 import { IELTS_WORDS } from "@/data/ieltsWords";
 import { IELTS_PHRASES, PhrasePair } from "@/data/ieltsPhrases";
 import SentenceForge from "./SentenceForge";
@@ -194,6 +194,7 @@ export default function MatchingGame() {
   const [modalData, setModalData] = useState<any>(null);
   
   const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences" | "dictation" | "writing">("words");
+  const [isHome, setIsHome] = useState(true);
   const [allPairs, setAllPairs] = useState<PairData[]>([]);
   const [currentStage, setCurrentStage] = useState(1);
   const [wordPool, setWordPool] = useState<PairData[]>([]);
@@ -424,77 +425,80 @@ export default function MatchingGame() {
   const isStageComplete = matchedPairs.size === wordPool.length && wordPool.length > 0;
   const isGameComplete = isStageComplete && currentStage === TOTAL_STAGES;
 
-  return (
-    <div className={`w-full mx-auto p-6 ${gameMode === "writing" ? "max-w-6xl" : "max-w-3xl"}`}>
-      <div className={`text-center ${gameMode === "sentences" || gameMode === "dictation" || gameMode === "writing" ? "" : "mb-10"}`}>
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">雅思词汇消消乐</h1>
-        
-        {/* Tabs */}
-        <div className="flex justify-center gap-4 mb-8 flex-wrap">
-          <button
-            onClick={() => setGameMode("words")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
-              gameMode === "words" 
-                ? "bg-blue-500 text-white shadow-md" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <BookOpen className="w-5 h-5" />
-            雅思词汇
-          </button>
-          <button
-            onClick={() => setGameMode("phrases")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
-              gameMode === "phrases" 
-                ? "bg-purple-500 text-white shadow-md" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <MessageCircle className="w-5 h-5" />
-            雅思短语同义替换
-          </button>
-          <button
-            onClick={() => setGameMode("sentences")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
-              gameMode === "sentences" 
-                ? "bg-amber-500 text-white shadow-md" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <span className="text-xl leading-none">✨</span>
-            长难句锻造场
-          </button>
-          <button
-            onClick={() => setGameMode("dictation")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
-              gameMode === "dictation" 
-                ? "bg-teal-600 text-white shadow-md" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <Headphones className="w-5 h-5" />
-            听写作文
-          </button>
-          <button
-            onClick={() => setGameMode("writing")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
-              gameMode === "writing" 
-                ? "bg-violet-500 text-white shadow-md" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            <PenLine className="w-5 h-5" />
-            写作训练场
-          </button>
+  const appCards = [
+    { mode: "words" as const, title: "雅思词汇", desc: "点击左侧英文和右侧中文进行配对", icon: BookOpen, color: "from-blue-400 to-blue-600", bgColor: "bg-blue-50", iconColor: "text-blue-600" },
+    { mode: "phrases" as const, title: "同义替换", desc: "点击左侧和右侧的同义短语进行配对", icon: MessageCircle, color: "from-purple-400 to-purple-600", bgColor: "bg-purple-50", iconColor: "text-purple-600" },
+    { mode: "sentences" as const, title: "长难句锻造", desc: "点击下方的词块，按顺序拼出完整的句子", icon: Sparkles, color: "from-amber-400 to-amber-600", bgColor: "bg-amber-50", iconColor: "text-amber-600" },
+    { mode: "dictation" as const, title: "听写作文", desc: "听 AI 朗读范文，盲打全文后提交对比与评星", icon: Headphones, color: "from-teal-400 to-teal-600", bgColor: "bg-teal-50", iconColor: "text-teal-600" },
+    { mode: "writing" as const, title: "写作训练", desc: "激活思维节点，实时评分反馈，快速提升写作能力", icon: PenLine, color: "from-violet-400 to-violet-600", bgColor: "bg-violet-50", iconColor: "text-violet-600" },
+  ];
+
+  const handleCardClick = (mode: "words" | "phrases" | "sentences" | "dictation" | "writing") => {
+    setGameMode(mode);
+    setIsHome(false);
+    if (mode === "words" || mode === "phrases") {
+      startFullGame(mode);
+    }
+  };
+
+  const handleBackHome = () => {
+    setIsHome(true);
+  };
+
+  if (isHome) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-6">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-3">
+            雅思写作修罗场
+          </h1>
+          <p className="text-gray-500 text-lg">选择一个模块开始训练</p>
         </div>
 
-        <p className="text-gray-500">
-          {gameMode === "words" ? "点击左侧英文和右侧中文进行配对" : 
-           gameMode === "phrases" ? "点击左侧和右侧的同义短语进行配对" : 
-           gameMode === "sentences" ? "点击下方的词块，按顺序拼出完整的句子" :
-           gameMode === "dictation" ? "听 AI 朗读范文，盲打全文后提交对比与评星" :
-           "激活思维节点，实时评分反馈，快速提升写作能力"}
-        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+          {appCards.map((card) => (
+            <motion.button
+              key={card.mode}
+              onClick={() => handleCardClick(card.mode)}
+              whileHover={{ scale: 1.03, y: -3 }}
+              whileTap={{ scale: 0.97 }}
+              className="relative p-6 rounded-2xl bg-white border border-gray-100 shadow-md hover:shadow-xl transition-shadow text-left group"
+            >
+              <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${card.bgColor} mb-4 group-hover:scale-110 transition-transform`}>
+                <card.icon className={`w-7 h-7 ${card.iconColor}`} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">{card.title}</h3>
+              <p className="text-sm text-gray-400">{card.desc}</p>
+              <div className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gradient-to-r ${card.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`w-full mx-auto p-6 ${gameMode === "writing" ? "max-w-6xl" : "max-w-3xl"}`}>
+      {/* Back Button */}
+      <button
+        onClick={handleBackHome}
+        className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors mb-4 group"
+      >
+        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-sm font-medium">返回主页</span>
+      </button>
+
+      <div className={`text-center ${gameMode === "sentences" || gameMode === "dictation" || gameMode === "writing" ? "" : "mb-10"}`}>
+        {(() => {
+          const active = appCards.find(c => c.mode === gameMode);
+          if (!active) return null;
+          return (
+            <>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">{active.title}</h1>
+              <p className="text-gray-500">{active.desc}</p>
+            </>
+          );
+        })()}
         {gameMode !== "sentences" && gameMode !== "dictation" && gameMode !== "writing" && wordPool.length > 0 && (
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold shadow-sm">
