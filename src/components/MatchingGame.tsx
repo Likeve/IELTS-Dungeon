@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones, PenLine, ArrowLeft, Sparkles } from "lucide-react";
 import { IELTS_WORDS } from "@/data/ieltsWords";
@@ -9,6 +9,7 @@ import SentenceForge from "./SentenceForge";
 import DictationGame from "./DictationGame";
 import WritingForge from "./WritingForge";
 import { speakText } from "@/lib/speech";
+import { WORD_EXAMPLES } from "@/data/ieltsWordExamples";
 
 // Types
 type GameItem = {
@@ -179,7 +180,93 @@ const highlightPhrase = (text: string, phrase1: string, phrase2: string) => {
   }
 };
 
-export default function MatchingGame() {
+const SHARD_COLORS = ["#6EE7B7", "#34D399", "#10B981", "#A7F3D0", "#059669", "#047857"];
+
+function ParticleBurst() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState({ w: 140, h: 48 });
+
+  useEffect(() => {
+    const el = ref.current?.parentElement;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      setRect({ w: r.width, h: r.height });
+    }
+  }, []);
+
+  const cols = 5;
+  const rows = 4;
+  const total = cols * rows;
+
+  const particles = useMemo(() => {
+    return Array.from({ length: total }).map((_, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const startX = (col / (cols - 1) - 0.5) * rect.w * 0.85;
+      const startY = (row / (rows - 1) - 0.5) * rect.h * 0.85;
+      const outAngle = Math.atan2(startY, startX);
+      const spreadAngle = outAngle + (Math.random() - 0.5) * 0.25;
+      const baseDist = Math.max(rect.w, rect.h) * 0.5;
+      const distance = baseDist + Math.random() * baseDist * 0.6;
+      const endX = Math.cos(spreadAngle) * distance;
+      const endY = Math.sin(spreadAngle) * distance;
+      const w = 6 + Math.random() * 6;
+      const h = 3 + Math.random() * 4;
+      const rotation = outAngle * (180 / Math.PI) + (Math.random() - 0.5) * 30;
+      return { startX, startY, endX, endY, w, h, rotation, color: SHARD_COLORS[i % SHARD_COLORS.length] };
+    });
+  }, [rect]);
+
+  return (
+    <div ref={ref} className="absolute inset-0 pointer-events-none overflow-visible z-10">
+      {particles.map((p, i) => (
+        <motion.div
+          key={i}
+          initial={{ x: p.startX, y: p.startY, scale: 1, opacity: 1, rotate: 0 }}
+          animate={{
+            x: p.endX,
+            y: p.endY,
+            scale: 0.1,
+            opacity: 0,
+            rotate: p.rotation,
+          }}
+          transition={{
+            duration: 1.1,
+            ease: "easeOut",
+          }}
+          className="absolute inset-0 m-auto rounded-[2px]"
+          style={{
+            width: p.w,
+            height: p.h,
+            backgroundColor: p.color,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+const highlightWordInText = (text: string, word: string): React.ReactNode => {
+  if (!word) return text;
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const stem = escaped.length >= 4 ? escaped.substring(0, Math.min(escaped.length - 1, 5)) : escaped;
+  const pattern = new RegExp(`(${escaped}\\w*|\\w*${stem}\\w*)`, 'gi');
+  const parts = text.split(pattern);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => {
+    const lowerPart = part.toLowerCase();
+    const lowerWord = word.toLowerCase();
+    if (lowerPart === lowerWord || (lowerPart.length >= lowerWord.length && lowerPart.startsWith(lowerWord))) {
+      return <strong key={i} className="font-bold text-gray-900">{part}</strong>;
+    }
+    if (lowerPart.length >= 4 && lowerWord.length >= 4 && lowerPart.startsWith(lowerWord.substring(0, 4))) {
+      return <strong key={i} className="font-bold text-gray-900">{part}</strong>;
+    }
+    return part;
+  });
+};
+
+export default function MatchingGame({ onInsideChange }: { onInsideChange?: (inside: boolean) => void }) {
   const [leftItems, setLeftItems] = useState<GameItem[]>([]);
   const [rightItems, setRightItems] = useState<GameItem[]>([]);
   
@@ -436,6 +523,7 @@ export default function MatchingGame() {
   const handleCardClick = (mode: "words" | "phrases" | "sentences" | "dictation" | "writing") => {
     setGameMode(mode);
     setIsHome(false);
+    onInsideChange?.(true);
     if (mode === "words" || mode === "phrases") {
       startFullGame(mode);
     }
@@ -443,12 +531,14 @@ export default function MatchingGame() {
 
   const handleBackHome = () => {
     setIsHome(true);
+    onInsideChange?.(false);
   };
 
   if (isHome) {
     return (
       <div className="w-full max-w-4xl mx-auto p-6">
         <div className="text-center mb-12">
+          <img src="/logo.svg" alt="Logo" className="h-20 w-20 mx-auto mb-5" />
           <h1 className="text-4xl font-extrabold text-gray-900 mb-3">
             雅思写作修罗场
           </h1>
@@ -469,7 +559,6 @@ export default function MatchingGame() {
               </div>
               <h3 className="text-lg font-bold text-gray-800 mb-1">{card.title}</h3>
               <p className="text-sm text-gray-400">{card.desc}</p>
-              <div className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gradient-to-r ${card.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
             </motion.button>
           ))}
         </div>
@@ -535,22 +624,77 @@ export default function MatchingGame() {
           </button>
         </motion.div>
       ) : isStageComplete ? (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-12 bg-blue-50 rounded-3xl border-2 border-blue-200 shadow-sm"
+          className={`mx-auto ${gameMode === "words" ? "max-w-3xl" : ""}`}
         >
-          <div className="flex justify-center mb-6">
-            <CheckCircle2 className="w-20 h-20 text-blue-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-blue-700 mb-6">阶段 {currentStage} 完成！</h2>
-          <p className="text-blue-600 mb-8 font-medium">你已经掌握了这 {WORDS_PER_STAGE} 个{gameMode === "words" ? "单词" : "短语"}，继续挑战下一组吧！</p>
-          <button 
-            onClick={handleNextStage}
-            className="px-8 py-3 bg-blue-500 text-white rounded-2xl font-bold text-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
-          >
-            进入阶段 {currentStage + 1}
-          </button>
+          {gameMode === "words" ? (
+            <div className="rounded-3xl border-2 border-blue-200 bg-white shadow-md overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-6 text-center">
+                <CheckCircle2 className="w-16 h-16 text-white mx-auto mb-2" />
+                <h2 className="text-2xl font-bold text-white">阶段 {currentStage} 完成！</h2>
+                <p className="text-blue-100 text-sm mt-1">
+                  以下是你本阶段掌握的 {WORDS_PER_STAGE} 个单词及其例句
+                </p>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {wordPool.map((pair, idx) => {
+                  const examples = WORD_EXAMPLES[pair.id];
+                  return (
+                    <div key={pair.id} className="px-5 py-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span className="text-lg font-bold text-gray-900">{pair.left}</span>
+                        <span className="text-base text-gray-500">{pair.right}</span>
+                      </div>
+                      {examples && (
+                        <div className="ml-10 space-y-1.5">
+                          {examples.map((ex, i) => (
+                            <div key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-relaxed">
+                              <span className="text-blue-300 mt-0.5 shrink-0">•</span>
+                              <span className="flex-1">{highlightWordInText(ex, pair.left)}</span>
+                              <button
+                                type="button"
+                                onClick={() => speakText(ex)}
+                                className="shrink-0 text-gray-300 hover:text-blue-500 transition-colors p-1"
+                              >
+                                <Volume2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 text-center">
+                <button
+                  onClick={handleNextStage}
+                  className="px-8 py-3 bg-blue-500 text-white rounded-2xl font-bold text-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
+                >
+                  进入阶段 {currentStage + 1}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-blue-50 rounded-3xl border-2 border-blue-200 shadow-sm">
+              <div className="flex justify-center mb-6">
+                <CheckCircle2 className="w-20 h-20 text-blue-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-blue-700 mb-6">阶段 {currentStage} 完成！</h2>
+              <p className="text-blue-600 mb-8 font-medium">你已经掌握了这 {WORDS_PER_STAGE} 个短语，继续挑战下一组吧！</p>
+              <button
+                onClick={handleNextStage}
+                className="px-8 py-3 bg-blue-500 text-white rounded-2xl font-bold text-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
+              >
+                进入阶段 {currentStage + 1}
+              </button>
+            </div>
+          )}
         </motion.div>
       ) : (
         <div className="grid grid-cols-2 gap-6 md:gap-12">
@@ -567,19 +711,25 @@ export default function MatchingGame() {
                     key={item.id}
                     layout
                     initial={{ opacity: 0, x: -20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      x: isError ? [-5, 5, -5, 5, 0] : 0,
-                      transition: { x: { duration: 0.4 } }
-                    }}
+                    animate={isSuccess
+                      ? { opacity: 0, scale: 0.2, x: 0 }
+                      : { 
+                          opacity: 1, 
+                          x: isError ? [-5, 5, -5, 5, 0] : 0,
+                        }
+                    }
+                    transition={isSuccess
+                      ? { duration: 1.1, ease: "easeOut" }
+                      : { x: { duration: 0.4 } }
+                    }
                     exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={isSuccess ? undefined : { scale: 1.02 }}
+                    whileTap={isSuccess ? undefined : { scale: 0.98 }}
                     onClick={() => handleItemClick(item)}
                     className={`
-                      p-4 rounded-2xl text-lg font-bold border-b-4 transition-colors duration-200 text-center
+                      p-4 rounded-2xl text-lg font-bold border-b-4 transition-colors duration-200 text-center relative
                       ${isSuccess
-                        ? 'bg-green-100 border-green-500 text-green-700'
+                        ? 'bg-transparent border-transparent'
                         : isError 
                           ? 'bg-red-100 border-red-500 text-red-700'
                           : isSelected 
@@ -587,7 +737,8 @@ export default function MatchingGame() {
                             : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}
                     `}
                   >
-                    {item.text}
+                    {isSuccess && <ParticleBurst />}
+                    <span className={isSuccess ? "invisible" : ""}>{item.text}</span>
                   </motion.button>
                 );
               })}
@@ -607,19 +758,25 @@ export default function MatchingGame() {
                     key={item.id}
                     layout
                     initial={{ opacity: 0, x: 20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      x: isError ? [-5, 5, -5, 5, 0] : 0,
-                      transition: { x: { duration: 0.4 } }
-                    }}
+                    animate={isSuccess
+                      ? { opacity: 0, scale: 0.2, x: 0 }
+                      : { 
+                          opacity: 1, 
+                          x: isError ? [-5, 5, -5, 5, 0] : 0,
+                        }
+                    }
+                    transition={isSuccess
+                      ? { duration: 1.1, ease: "easeOut" }
+                      : { x: { duration: 0.4 } }
+                    }
                     exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={isSuccess ? undefined : { scale: 1.02 }}
+                    whileTap={isSuccess ? undefined : { scale: 0.98 }}
                     onClick={() => handleItemClick(item)}
                     className={`
-                      p-4 rounded-2xl text-lg font-bold border-b-4 transition-colors duration-200 text-center
+                      p-4 rounded-2xl text-lg font-bold border-b-4 transition-colors duration-200 text-center relative
                       ${isSuccess
-                        ? 'bg-green-100 border-green-500 text-green-700'
+                        ? 'bg-transparent border-transparent'
                         : isError 
                           ? 'bg-red-100 border-red-500 text-red-700'
                           : isSelected 
@@ -627,7 +784,8 @@ export default function MatchingGame() {
                             : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}
                     `}
                   >
-                    {item.text}
+                    {isSuccess && <ParticleBurst />}
+                    <span className={isSuccess ? "invisible" : ""}>{item.text}</span>
                   </motion.button>
                 );
               })}
