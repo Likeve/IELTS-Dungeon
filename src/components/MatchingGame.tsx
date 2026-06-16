@@ -44,49 +44,14 @@ const shuffle = <T,>(array: T[]): T[] => {
   return newArray;
 };
 
-// Singleton AudioContext for mobile compatibility
-let audioCtx: AudioContext | null = null;
-const getAudioContext = () => {
-  if (typeof window === "undefined") return null;
-  if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (AudioContextClass) {
-      audioCtx = new AudioContextClass();
-    }
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-  return audioCtx;
-};
-
 // Helper: Play success sound
 const playSuccessSound = () => {
   try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const playOscillator = (freq: number, startTime: number, duration: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-
-      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
-      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + startTime + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(ctx.currentTime + startTime);
-      osc.stop(ctx.currentTime + startTime + duration);
-    };
-
-    // Play a nice two-tone chime (e.g., C5 followed by G5)
-    playOscillator(523.25, 0, 0.3); // C5
-    playOscillator(783.99, 0.1, 0.5); // G5
+    const audio = new Audio("/Audios/matched.mp3");
+    audio.volume = 0.6;
+    audio.play().catch((e) => {
+      console.error("Audio playback failed", e);
+    });
   } catch (e) {
     console.error("Audio playback failed", e);
   }
@@ -95,30 +60,11 @@ const playSuccessSound = () => {
 // Helper: Play error sound
 const playErrorSound = () => {
   try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const playOscillator = (freq: number, type: OscillatorType, startTime: number, duration: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-
-      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
-      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + startTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(ctx.currentTime + startTime);
-      osc.stop(ctx.currentTime + startTime + duration);
-    };
-
-    // Play a low "uh-oh" double beep
-    playOscillator(150, 'square', 0, 0.15);
-    playOscillator(100, 'square', 0.15, 0.2);
+    const audio = new Audio("/Audios/error.mp3");
+    audio.volume = 0.6;
+    audio.play().catch((e) => {
+      console.error("Audio playback failed", e);
+    });
   } catch (e) {
     console.error("Audio playback failed", e);
   }
@@ -180,7 +126,7 @@ const highlightPhrase = (text: string, phrase1: string, phrase2: string) => {
   }
 };
 
-const SHARD_COLORS = ["#6EE7B7", "#34D399", "#10B981", "#A7F3D0", "#059669", "#047857"];
+const SHARD_COLORS = ["#AFFF8A", "#98E87A", "#82D46A", "#B8FF9E", "#6ECF54", "#5BB83F"];
 
 function ParticleBurst() {
   const ref = useRef<HTMLDivElement>(null);
@@ -513,7 +459,7 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
   const isGameComplete = isStageComplete && currentStage === TOTAL_STAGES;
 
   const appCards = [
-    { mode: "words" as const, title: "雅思词汇", desc: "点击左侧英文和右侧中文进行配对", icon: BookOpen, color: "from-blue-400 to-blue-600", bgColor: "bg-blue-50", iconColor: "text-blue-600" },
+    { mode: "words" as const, title: "词汇消消乐", desc: "点击左侧英文和右侧中文进行配对", icon: BookOpen, color: "from-green-400 to-green-600", bgColor: "bg-green-50", iconColor: "text-green-600" },
     { mode: "phrases" as const, title: "同义替换", desc: "点击左侧和右侧的同义短语进行配对", icon: MessageCircle, color: "from-purple-400 to-purple-600", bgColor: "bg-purple-50", iconColor: "text-purple-600" },
     { mode: "sentences" as const, title: "长难句锻造", desc: "点击下方的词块，按顺序拼出完整的句子", icon: Sparkles, color: "from-amber-400 to-amber-600", bgColor: "bg-amber-50", iconColor: "text-amber-600" },
     { mode: "dictation" as const, title: "听写作文", desc: "听 AI 朗读范文，盲打全文后提交对比与评星", icon: Headphones, color: "from-teal-400 to-teal-600", bgColor: "bg-teal-50", iconColor: "text-teal-600" },
@@ -567,232 +513,259 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
   }
 
   return (
-    <div className={`w-full mx-auto p-6 ${gameMode === "writing" ? "max-w-6xl" : "max-w-3xl"}`}>
+    <div className={`w-full mx-auto p-8 ${gameMode === "writing" ? "max-w-6xl" : ""}`}>
       {/* Back Button */}
       <button
         onClick={handleBackHome}
-        className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors mb-4 group"
+        className="flex items-center gap-2 text-[#8C8C6D] hover:text-[#232323] transition-colors mb-6 group"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         <span className="text-sm font-medium">返回主页</span>
       </button>
 
-      <div className={`text-center ${gameMode === "sentences" || gameMode === "dictation" || gameMode === "writing" ? "" : "mb-10"}`}>
-        {(() => {
-          const active = appCards.find(c => c.mode === gameMode);
-          if (!active) return null;
-          return (
-            <>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">{active.title}</h1>
-              <p className="text-gray-500">{active.desc}</p>
-            </>
-          );
-        })()}
-        {gameMode !== "sentences" && gameMode !== "dictation" && gameMode !== "writing" && wordPool.length > 0 && (
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <span className="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold shadow-sm">
-              阶段 {currentStage} / {TOTAL_STAGES}
-            </span>
-            <span className="text-sm text-blue-600 font-bold bg-blue-50 px-4 py-1.5 rounded-full shadow-sm">
-              本组进度: {matchedPairs.size} / {wordPool.length}
-            </span>
+      {gameMode !== "sentences" && gameMode !== "dictation" && gameMode !== "writing" ? (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#AFFF8A] border border-[#232323] flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-[#232323]" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <h1 className="text-[30px] font-normal text-[#232323] leading-tight [font-family:var(--font-langyuan)]">词汇消消乐</h1>
+                <p className="text-base text-[#8C8C6D]">点击左侧英文和右侧中文进行配对</p>
+              </div>
+            </div>
+            <button className="px-4 py-1.5 bg-[#FFE6B4] border border-[#232323] rounded-full text-xs font-semibold text-[#413F2D] hover:bg-[#f5d690] transition-colors">
+              错题本
+            </button>
           </div>
-        )}
-      </div>
 
-      {gameMode === "sentences" ? (
+          {/* Game Area */}
+          <div className="bg-[#FDFFF7] rounded-3xl py-8">
+            {/* Progress */}
+            <div className="flex items-center justify-center gap-2.5 mb-6">
+              <div className="flex gap-1 flex-1 max-w-[1000px]">
+                {Array.from({ length: WORDS_PER_STAGE }).map((_, i) => {
+                  const completed = matchedPairs.size;
+                  const progressPerBar = completed > i ? 1 : 0;
+                  return (
+                    <div
+                      key={i}
+                      className="flex-1 h-2.5 rounded-full border border-[#232323] overflow-hidden relative"
+                      style={{ backgroundColor: '#ECECD9' }}
+                    >
+                      <div
+                        className="absolute inset-0 bg-[#AFFF8A] transition-all duration-300"
+                        style={{ width: `${progressPerBar * 100}%` }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <span className="shrink-0 px-4 py-1.5 bg-[#ECECD9] rounded-full text-xs font-semibold text-[#1D2838]">
+                {currentStage}/{TOTAL_STAGES}组
+              </span>
+            </div>
+
+            {/* Matching Grid / Completion */}
+            <div className="px-[72px]">
+            {isGameComplete ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-12 bg-green-50 rounded-3xl border border-[#AFFF8A]"
+              >
+                <div className="flex justify-center mb-6">
+                  <CheckCircle2 className="w-20 h-20 text-[#5BB83F]" />
+                </div>
+                <h2 className="text-2xl font-bold text-[#232323] mb-6">太棒了！你完成了所有 {allPairs.length} 个{gameMode === "words" ? "单词" : "短语"}！</h2>
+                <button 
+                  onClick={() => startFullGame(gameMode, true)}
+                  className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
+                >
+                  重新开始
+                </button>
+              </motion.div>
+            ) : isStageComplete ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                {gameMode === "words" ? (
+                  <div className="rounded-3xl border border-[#AFFF8A] bg-white overflow-hidden">
+                    <div className="bg-[#AFFF8A] border-b border-[#232323] px-6 py-6 text-center">
+                      <CheckCircle2 className="w-16 h-16 text-[#232323] mx-auto mb-2" />
+                      <h2 className="text-2xl font-bold text-[#232323]">阶段 {currentStage} 完成！</h2>
+                      <p className="text-[#413F2D] text-sm mt-1">
+                        以下是你本阶段掌握的 {WORDS_PER_STAGE} 个单词及其例句
+                      </p>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {wordPool.map((pair, idx) => {
+                        const examples = WORD_EXAMPLES[pair.id];
+                        return (
+                          <div key={pair.id} className="px-5 py-4">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="w-7 h-7 rounded-full bg-[#ECECD9] text-[#1D2838] text-xs font-bold flex items-center justify-center shrink-0">
+                                {idx + 1}
+                              </span>
+                              <span className="text-lg font-black text-[#080808] [font-family:var(--font-nunito)]">{pair.left}</span>
+                              <span className="text-base text-[#8C8C6D] [font-family:var(--font-langyuan)]">{pair.right}</span>
+                            </div>
+                            {examples && (
+                              <div className="ml-10 space-y-1.5">
+                                {examples.map((ex, i) => (
+                                  <div key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-relaxed">
+                                    <span className="text-[#AFFF8A] mt-0.5 shrink-0">•</span>
+                                    <span className="flex-1">{highlightWordInText(ex, pair.left)}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => speakText(ex)}
+                                      className="shrink-0 text-gray-300 hover:text-[#5BB83F] transition-colors p-1"
+                                    >
+                                      <Volume2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="bg-[#FDFFF7] px-6 py-4 border-t border-[#ECECD9] text-center">
+                      <button
+                        onClick={handleNextStage}
+                        className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
+                      >
+                        进入阶段 {currentStage + 1}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-[#ECECD9] rounded-3xl border border-[#AFFF8A]">
+                    <div className="flex justify-center mb-6">
+                      <CheckCircle2 className="w-20 h-20 text-[#5BB83F]" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#232323] mb-6">阶段 {currentStage} 完成！</h2>
+                    <p className="text-[#8C8C6D] mb-8 font-medium">你已经掌握了这 {WORDS_PER_STAGE} 个短语，继续挑战下一组吧！</p>
+                    <button
+                      onClick={handleNextStage}
+                      className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
+                    >
+                      进入阶段 {currentStage + 1}
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+            <div className="grid grid-cols-2 gap-6 md:gap-12">
+              {/* Left Column - English */}
+              <div className="flex flex-col gap-4">
+                <AnimatePresence mode="popLayout">
+                  {leftItems.map((item) => {
+                    const isSelected = selectedLeft === item.id;
+                    const isError = errorPair?.left === item.id;
+                    const isSuccess = successPair?.left === item.id;
+
+                    return (
+                      <motion.button
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={isSuccess
+                          ? { opacity: 0, scale: 0.2, x: 0 }
+                          : { 
+                              opacity: 1, 
+                              x: isError ? [-5, 5, -5, 5, 0] : 0,
+                            }
+                        }
+                        transition={isSuccess
+                          ? { duration: 1.1, ease: "easeOut" }
+                          : { x: { duration: 0.4 } }
+                        }
+                        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                        whileHover={isSuccess ? undefined : { scale: 1.02 }}
+                        whileTap={isSuccess ? undefined : { scale: 0.98 }}
+                        onClick={() => handleItemClick(item)}
+                        className={`
+                          p-4 rounded-full text-lg font-black border transition-colors duration-200 text-center relative [font-family:var(--font-nunito)]
+                          ${isSuccess
+                            ? 'bg-transparent border-transparent'
+                            : isError 
+                              ? 'bg-red-100 border-red-500 text-red-700'
+                              : isSelected 
+                                ? 'bg-[#AFFF8A] border-[#232323] text-[#080808] ring-2 ring-[#232323]' 
+                                : 'bg-[#AFFF8A] border-[#232323] text-[#080808] hover:bg-[#98e87a]'}
+                        `}
+                      >
+                        {isSuccess && <ParticleBurst />}
+                        <span className={isSuccess ? "invisible" : ""}>{item.text}</span>
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+
+              {/* Right Column - Chinese */}
+              <div className="flex flex-col gap-4">
+                <AnimatePresence mode="popLayout">
+                  {rightItems.map((item) => {
+                    const isSelected = selectedRight === item.id;
+                    const isError = errorPair?.right === item.id;
+                    const isSuccess = successPair?.right === item.id;
+
+                    return (
+                      <motion.button
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={isSuccess
+                          ? { opacity: 0, scale: 0.2, x: 0 }
+                          : { 
+                              opacity: 1, 
+                              x: isError ? [-5, 5, -5, 5, 0] : 0,
+                            }
+                        }
+                        transition={isSuccess
+                          ? { duration: 1.1, ease: "easeOut" }
+                          : { x: { duration: 0.4 } }
+                        }
+                        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                        whileHover={isSuccess ? undefined : { scale: 1.02 }}
+                        whileTap={isSuccess ? undefined : { scale: 0.98 }}
+                        onClick={() => handleItemClick(item)}
+                        className={`
+                          p-4 rounded-full text-lg font-normal border transition-colors duration-200 text-center relative [font-family:var(--font-langyuan)]
+                          ${isSuccess
+                            ? 'bg-transparent border-transparent'
+                            : isError 
+                              ? 'bg-red-100 border-red-500 text-red-700'
+                              : isSelected 
+                                ? 'bg-[#FFE6B4] border-[#232323] text-[#080808] ring-2 ring-[#232323]' 
+                                : 'bg-[#FFE6B4] border-[#232323] text-[#080808] hover:bg-[#f5d690]'}
+                        `}
+                      >
+                        {isSuccess && <ParticleBurst />}
+                        <span className={isSuccess ? "invisible" : ""}>{item.text}</span>
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            </div>
+            )}
+            </div>
+          </div>
+        </>
+      ) : gameMode === "sentences" ? (
         <SentenceForge />
       ) : gameMode === "dictation" ? (
         <DictationGame />
       ) : gameMode === "writing" ? (
         <WritingForge />
-      ) : isGameComplete ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-12 bg-green-50 rounded-3xl border-2 border-green-200 shadow-sm"
-        >
-          <div className="flex justify-center mb-6">
-            <CheckCircle2 className="w-20 h-20 text-green-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-green-700 mb-6">太棒了！你完成了所有 {allPairs.length} 个{gameMode === "words" ? "单词" : "短语"}！</h2>
-          <button 
-            onClick={() => startFullGame(gameMode, true)}
-            className="px-8 py-3 bg-green-500 text-white rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
-          >
-            重新开始
-          </button>
-        </motion.div>
-      ) : isStageComplete ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className={`mx-auto ${gameMode === "words" ? "max-w-3xl" : ""}`}
-        >
-          {gameMode === "words" ? (
-            <div className="rounded-3xl border-2 border-blue-200 bg-white shadow-md overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-6 text-center">
-                <CheckCircle2 className="w-16 h-16 text-white mx-auto mb-2" />
-                <h2 className="text-2xl font-bold text-white">阶段 {currentStage} 完成！</h2>
-                <p className="text-blue-100 text-sm mt-1">
-                  以下是你本阶段掌握的 {WORDS_PER_STAGE} 个单词及其例句
-                </p>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {wordPool.map((pair, idx) => {
-                  const examples = WORD_EXAMPLES[pair.id];
-                  return (
-                    <div key={pair.id} className="px-5 py-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span className="text-lg font-bold text-gray-900">{pair.left}</span>
-                        <span className="text-base text-gray-500">{pair.right}</span>
-                      </div>
-                      {examples && (
-                        <div className="ml-10 space-y-1.5">
-                          {examples.map((ex, i) => (
-                            <div key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-relaxed">
-                              <span className="text-blue-300 mt-0.5 shrink-0">•</span>
-                              <span className="flex-1">{highlightWordInText(ex, pair.left)}</span>
-                              <button
-                                type="button"
-                                onClick={() => speakText(ex)}
-                                className="shrink-0 text-gray-300 hover:text-blue-500 transition-colors p-1"
-                              >
-                                <Volume2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 text-center">
-                <button
-                  onClick={handleNextStage}
-                  className="px-8 py-3 bg-blue-500 text-white rounded-2xl font-bold text-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
-                >
-                  进入阶段 {currentStage + 1}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-blue-50 rounded-3xl border-2 border-blue-200 shadow-sm">
-              <div className="flex justify-center mb-6">
-                <CheckCircle2 className="w-20 h-20 text-blue-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-blue-700 mb-6">阶段 {currentStage} 完成！</h2>
-              <p className="text-blue-600 mb-8 font-medium">你已经掌握了这 {WORDS_PER_STAGE} 个短语，继续挑战下一组吧！</p>
-              <button
-                onClick={handleNextStage}
-                className="px-8 py-3 bg-blue-500 text-white rounded-2xl font-bold text-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
-              >
-                进入阶段 {currentStage + 1}
-              </button>
-            </div>
-          )}
-        </motion.div>
-      ) : (
-        <div className="grid grid-cols-2 gap-6 md:gap-12">
-          {/* Left Column - English */}
-          <div className="flex flex-col gap-4">
-            <AnimatePresence mode="popLayout">
-              {leftItems.map((item) => {
-                const isSelected = selectedLeft === item.id;
-                const isError = errorPair?.left === item.id;
-                const isSuccess = successPair?.left === item.id;
-
-                return (
-                  <motion.button
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={isSuccess
-                      ? { opacity: 0, scale: 0.2, x: 0 }
-                      : { 
-                          opacity: 1, 
-                          x: isError ? [-5, 5, -5, 5, 0] : 0,
-                        }
-                    }
-                    transition={isSuccess
-                      ? { duration: 1.1, ease: "easeOut" }
-                      : { x: { duration: 0.4 } }
-                    }
-                    exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                    whileHover={isSuccess ? undefined : { scale: 1.02 }}
-                    whileTap={isSuccess ? undefined : { scale: 0.98 }}
-                    onClick={() => handleItemClick(item)}
-                    className={`
-                      p-4 rounded-2xl text-lg font-bold border-b-4 transition-colors duration-200 text-center relative
-                      ${isSuccess
-                        ? 'bg-transparent border-transparent'
-                        : isError 
-                          ? 'bg-red-100 border-red-500 text-red-700'
-                          : isSelected 
-                            ? 'bg-blue-100 border-blue-400 text-blue-600' 
-                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}
-                    `}
-                  >
-                    {isSuccess && <ParticleBurst />}
-                    <span className={isSuccess ? "invisible" : ""}>{item.text}</span>
-                  </motion.button>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-
-          {/* Right Column - Chinese */}
-          <div className="flex flex-col gap-4">
-            <AnimatePresence mode="popLayout">
-              {rightItems.map((item) => {
-                const isSelected = selectedRight === item.id;
-                const isError = errorPair?.right === item.id;
-                const isSuccess = successPair?.right === item.id;
-
-                return (
-                  <motion.button
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={isSuccess
-                      ? { opacity: 0, scale: 0.2, x: 0 }
-                      : { 
-                          opacity: 1, 
-                          x: isError ? [-5, 5, -5, 5, 0] : 0,
-                        }
-                    }
-                    transition={isSuccess
-                      ? { duration: 1.1, ease: "easeOut" }
-                      : { x: { duration: 0.4 } }
-                    }
-                    exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                    whileHover={isSuccess ? undefined : { scale: 1.02 }}
-                    whileTap={isSuccess ? undefined : { scale: 0.98 }}
-                    onClick={() => handleItemClick(item)}
-                    className={`
-                      p-4 rounded-2xl text-lg font-bold border-b-4 transition-colors duration-200 text-center relative
-                      ${isSuccess
-                        ? 'bg-transparent border-transparent'
-                        : isError 
-                          ? 'bg-red-100 border-red-500 text-red-700'
-                          : isSelected 
-                            ? 'bg-blue-100 border-blue-400 text-blue-600' 
-                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}
-                    `}
-                  >
-                    {isSuccess && <ParticleBurst />}
-                    <span className={isSuccess ? "invisible" : ""}>{item.text}</span>
-                  </motion.button>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
+      ) : null}
       {/* Modal Overlay */}
       <AnimatePresence>
         {showModal && modalData && (
