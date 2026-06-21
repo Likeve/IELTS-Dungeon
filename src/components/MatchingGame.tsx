@@ -545,14 +545,16 @@ export default function MatchingGame({ initialGameMode, onInsideChange }: { init
 
   return (
     <div className="w-full mx-auto p-8">
-      {/* Back Button */}
-      <button
-        onClick={handleBackHome}
-        className="flex items-center gap-2 text-[#8C8C6D] hover:text-[#232323] transition-colors mb-6 group"
-      >
-        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="text-sm font-medium">返回主页</span>
-      </button>
+      {/* Back Button (hidden for chart mode) */}
+      {gameMode !== "chart" && (
+        <button
+          onClick={handleBackHome}
+          className="flex items-center gap-2 text-[#8C8C6D] hover:text-[#232323] transition-colors mb-6 group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-medium">返回主页</span>
+        </button>
+      )}
 
       {gameMode !== "sentences" && gameMode !== "dictation" && gameMode !== "chart" ? (
         <>
