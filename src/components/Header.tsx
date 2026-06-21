@@ -5,7 +5,7 @@ import { Flag, User } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="h-[65px] shrink-0 flex items-center justify-end gap-3 px-4 bg-[#FFFCF4] border-b border-[#F4F4F4]">
+    <header className="h-[65px] shrink-0 flex items-center justify-end gap-3 px-4 bg-[#FFFCF4] border-b border-[#F4F4F4] sticky top-0 z-30">
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#ECECD9]">
         <span className="text-sm font-black text-[#080808]">等级：Lv4</span>
       </div>

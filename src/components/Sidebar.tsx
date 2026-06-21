@@ -1,14 +1,18 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
-import { Headphones, Mic, BookOpen, PenLine, Settings } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Headphones, Mic, BookOpen, PenLine, Settings, ChevronDown } from "lucide-react";
 
 export type Category = "listening" | "speaking" | "reading" | "writing";
+
+export type GameMode = "words" | "phrases" | "sentences" | "dictation" | "chart";
 
 type SidebarProps = {
   active: Category;
   onSelect: (category: Category) => void;
+  activeGameMode: GameMode;
+  onGameModeSelect: (mode: GameMode) => void;
 };
 
 const categories: { id: Category; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -18,11 +22,21 @@ const categories: { id: Category; label: string; icon: React.ComponentType<{ cla
   { id: "writing", label: "写作王国", icon: PenLine },
 ];
 
-export default function Sidebar({ active, onSelect }: SidebarProps) {
+const writingSubItems: { mode: GameMode; label: string }[] = [
+  { mode: "words", label: "词汇消消乐" },
+  { mode: "phrases", label: "同义替换" },
+  { mode: "sentences", label: "长难句锻造" },
+  { mode: "dictation", label: "听写作文" },
+  { mode: "chart", label: "图表挑战赛" },
+];
+
+export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSelect }: SidebarProps) {
+  const [writingExpanded, setWritingExpanded] = useState(true);
+
   return (
     <>
       {/* Desktop: Left Sidebar */}
-      <aside className="hidden md:flex w-40 shrink-0 flex-col border-r border-[#F4F4F4] bg-[#FFFCF4] px-4 py-6 gap-6">
+      <aside className="hidden md:flex w-40 shrink-0 flex-col border-r border-[#F4F4F4] bg-[#FFFCF4] px-4 py-6 gap-6 h-screen sticky top-0">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-0">
           <div className="w-6 h-6 flex items-center justify-center">
@@ -37,21 +51,76 @@ export default function Sidebar({ active, onSelect }: SidebarProps) {
         <div className="flex flex-col gap-1 flex-1">
           {categories.map((cat) => {
             const isActive = active === cat.id;
+            const isWriting = cat.id === "writing";
+
             return (
-              <motion.button
-                key={cat.id}
-                onClick={() => onSelect(cat.id)}
-                whileHover={isActive ? {} : { scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-full text-sm transition-all ${
-                  isActive
-                    ? "bg-[#F3FAE3] text-black font-black"
-                    : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
-                }`}
-              >
-                <cat.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-[#232323]" : "text-[#808771]"}`} />
-                <span className="whitespace-nowrap">{cat.label}</span>
-              </motion.button>
+              <div key={cat.id}>
+                <motion.button
+                  onClick={() => {
+                    if (isWriting) {
+                      setWritingExpanded(!writingExpanded);
+                    }
+                    onSelect(cat.id);
+                  }}
+                  whileHover={isActive ? {} : { scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-full text-sm transition-all ${
+                    isActive
+                      ? "bg-[#F3FAE3] text-black font-black"
+                      : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
+                  }`}
+                >
+                  <cat.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-[#232323]" : "text-[#808771]"}`} />
+                  <span className="whitespace-nowrap flex-1 text-left">{cat.label}</span>
+                  {isWriting && (
+                    <motion.div
+                      animate={{ rotate: writingExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="w-4 h-4 shrink-0" />
+                    </motion.div>
+                  )}
+                </motion.button>
+
+                {/* Writing Sub-menu */}
+                {isWriting && (
+                  <AnimatePresence initial={false}>
+                    {writingExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
+                          {writingSubItems.map((item) => {
+                            const isSubActive = activeGameMode === item.mode;
+                            return (
+                              <motion.button
+                                key={item.mode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onGameModeSelect(item.mode);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                className={`w-full text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
+                                  isSubActive
+                                    ? "bg-[#ECECD9] text-[#080808] font-black"
+                                    : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
+                                }`}
+                              >
+                                {item.label}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                )}
+              </div>
             );
           })}
         </div>

@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones, PenLine, ArrowLeft, Sparkles } from "lucide-react";
+import { CheckCircle2, BookOpen, MessageCircle, X, Volume2, Headphones, ArrowLeft, Sparkles, BarChart3 } from "lucide-react";
 import { IELTS_WORDS } from "@/data/ieltsWords";
 import { IELTS_PHRASES, PhrasePair } from "@/data/ieltsPhrases";
 import SentenceForge from "./SentenceForge";
 import DictationGame from "./DictationGame";
-import WritingForge from "./WritingForge";
+import ChartChallenge from "./ChartChallenge";
 import { speakText } from "@/lib/speech";
 import { WORD_EXAMPLES } from "@/data/ieltsWordExamples";
 
@@ -128,6 +128,18 @@ const highlightPhrase = (text: string, phrase1: string, phrase2: string) => {
 
 const SHARD_COLORS = ["#AFFF8A", "#98E87A", "#82D46A", "#B8FF9E", "#6ECF54", "#5BB83F"];
 
+const COMBO_LABELS: Record<number, string> = {
+  2: "Good",
+  3: "Great",
+  4: "Excellent",
+  5: "Amazing",
+  6: "Outstanding",
+  7: "Incredible",
+  8: "Unstoppable",
+  9: "Legendary",
+  10: "GODLIKE",
+};
+
 function ParticleBurst() {
   const ref = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState({ w: 140, h: 48 });
@@ -212,7 +224,7 @@ const highlightWordInText = (text: string, word: string): React.ReactNode => {
   });
 };
 
-export default function MatchingGame({ onInsideChange }: { onInsideChange?: (inside: boolean) => void }) {
+export default function MatchingGame({ initialGameMode, onInsideChange }: { initialGameMode?: "words" | "phrases" | "sentences" | "dictation" | "chart"; onInsideChange?: (inside: boolean) => void }) {
   const [leftItems, setLeftItems] = useState<GameItem[]>([]);
   const [rightItems, setRightItems] = useState<GameItem[]>([]);
   
@@ -226,19 +238,23 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState<any>(null);
   
-  const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences" | "dictation" | "writing">("words");
-  const [isHome, setIsHome] = useState(true);
+  const [gameMode, setGameMode] = useState<"words" | "phrases" | "sentences" | "dictation" | "chart">(initialGameMode || "words");
+  const [isHome, setIsHome] = useState(!initialGameMode);
   const [allPairs, setAllPairs] = useState<PairData[]>([]);
   const [currentStage, setCurrentStage] = useState(1);
   const [wordPool, setWordPool] = useState<PairData[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<Set<string>>(new Set());
   const [isMounted, setIsMounted] = useState(false);
+  const [comboStreak, setComboStreak] = useState(0);
+  const [comboText, setComboText] = useState<string | null>(null);
+  const [comboCount, setComboCount] = useState(0);
   
   const WORDS_PER_STAGE = 10;
   const TOTAL_STAGES = Math.ceil(allPairs.length / WORDS_PER_STAGE) || 1;
 
   const loadStage = (stage: number, pairs: PairData[]) => {
     setCurrentStage(stage);
+    setComboStreak(0);
     const stagePairs = pairs.slice((stage - 1) * WORDS_PER_STAGE, stage * WORDS_PER_STAGE);
     setWordPool(stagePairs);
     
@@ -268,8 +284,8 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
     setIsProcessing(false);
   };
 
-  const startFullGame = (mode: "words" | "phrases" | "sentences" | "dictation" | "writing", forceFresh = false) => {
-    if (mode === "sentences" || mode === "dictation" || mode === "writing") return;
+  const startFullGame = (mode: "words" | "phrases" | "sentences" | "dictation" | "chart", forceFresh = false) => {
+    if (mode === "sentences" || mode === "dictation" || mode === "chart") return;
 
     if (!forceFresh) {
       const saved = localStorage.getItem(`ielts_game_progress_${mode}`);
@@ -315,9 +331,17 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
     }
   }, [gameMode]);
 
+  // Sync external gameMode prop (sidebar switching)
+  useEffect(() => {
+    if (initialGameMode && initialGameMode !== gameMode) {
+      setGameMode(initialGameMode);
+      setIsHome(false);
+    }
+  }, [initialGameMode]);
+
   // Save progress (words / phrases only)
   useEffect(() => {
-    if (!isMounted || gameMode === "sentences" || gameMode === "dictation" || gameMode === "writing" || allPairs.length === 0) return;
+    if (!isMounted || gameMode === "sentences" || gameMode === "dictation" || gameMode === "chart" || allPairs.length === 0) return;
     
     const progress: GameProgress = {
       allPairs,
@@ -379,27 +403,34 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
     if (leftItem?.pairId === rightItem?.pairId) {
       // Match successful
       playSuccessSound();
+      const newStreak = comboStreak + 1;
+      setComboStreak(newStreak);
+      if (newStreak >= 2) {
+        const label = COMBO_LABELS[Math.min(newStreak, 10)] || "GODLIKE";
+        setComboText(label);
+        setComboCount(newStreak);
+        setTimeout(() => {
+          setComboText(null);
+        }, 1500);
+      }
       setSuccessPair({ left: leftId, right: rightId });
-      setTimeout(() => {
-        if (gameMode === "phrases") {
-          setModalData({ isMatch: true, leftId, rightId, pairId: leftItem!.pairId });
-          setShowModal(true);
-        } else {
-          handleMatchSuccess(leftId, rightId, leftItem!.pairId);
-        }
-      }, 500);
+      if (gameMode === "phrases") {
+        setModalData({ isMatch: true, leftId, rightId, pairId: leftItem!.pairId });
+        setShowModal(true);
+      } else {
+        handleMatchSuccess(leftId, rightId, leftItem!.pairId);
+      }
     } else {
       // Match failed
       playErrorSound();
+      setComboStreak(0);
       setErrorPair({ left: leftId, right: rightId });
-      setTimeout(() => {
-        if (gameMode === "phrases") {
-          setModalData({ isMatch: false, leftId, rightId, leftPairId: leftItem!.pairId, rightPairId: rightItem!.pairId });
-          setShowModal(true);
-        } else {
-          handleMatchFail();
-        }
-      }, 800);
+      if (gameMode === "phrases") {
+        setModalData({ isMatch: false, leftId, rightId, leftPairId: leftItem!.pairId, rightPairId: rightItem!.pairId });
+        setShowModal(true);
+      } else {
+        handleMatchFail();
+      }
     }
   };
 
@@ -463,10 +494,10 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
     { mode: "phrases" as const, title: "同义替换", desc: "点击左侧和右侧的同义短语进行配对", icon: MessageCircle, color: "from-purple-400 to-purple-600", bgColor: "bg-purple-50", iconColor: "text-purple-600" },
     { mode: "sentences" as const, title: "长难句锻造", desc: "点击下方的词块，按顺序拼出完整的句子", icon: Sparkles, color: "from-amber-400 to-amber-600", bgColor: "bg-amber-50", iconColor: "text-amber-600" },
     { mode: "dictation" as const, title: "听写作文", desc: "听 AI 朗读范文，盲打全文后提交对比与评星", icon: Headphones, color: "from-teal-400 to-teal-600", bgColor: "bg-teal-50", iconColor: "text-teal-600" },
-    { mode: "writing" as const, title: "写作训练", desc: "激活思维节点，实时评分反馈，快速提升写作能力", icon: PenLine, color: "from-violet-400 to-violet-600", bgColor: "bg-violet-50", iconColor: "text-violet-600" },
+    { mode: "chart" as const, title: "图表挑战赛", desc: "查看雅思 Task 1 图表，分析数据特征与趋势", icon: BarChart3, color: "from-orange-400 to-orange-600", bgColor: "bg-orange-50", iconColor: "text-orange-600" },
   ];
 
-  const handleCardClick = (mode: "words" | "phrases" | "sentences" | "dictation" | "writing") => {
+  const handleCardClick = (mode: "words" | "phrases" | "sentences" | "dictation" | "chart") => {
     setGameMode(mode);
     setIsHome(false);
     onInsideChange?.(true);
@@ -513,7 +544,7 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
   }
 
   return (
-    <div className={`w-full mx-auto p-8 ${gameMode === "writing" ? "max-w-6xl" : ""}`}>
+    <div className="w-full mx-auto p-8">
       {/* Back Button */}
       <button
         onClick={handleBackHome}
@@ -523,7 +554,7 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
         <span className="text-sm font-medium">返回主页</span>
       </button>
 
-      {gameMode !== "sentences" && gameMode !== "dictation" && gameMode !== "writing" ? (
+      {gameMode !== "sentences" && gameMode !== "dictation" && gameMode !== "chart" ? (
         <>
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -542,7 +573,35 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
           </div>
 
           {/* Game Area */}
-          <div className="bg-[#FDFFF7] rounded-3xl py-8">
+          <div className="rounded-3xl py-8 relative overflow-hidden">
+            {/* Combo Popup - centered in game area */}
+            <AnimatePresence>
+              {comboText && (
+                <motion.div
+                  key={comboText + comboCount}
+                  initial={{ opacity: 0, scale: 0.3 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.3 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 12 }}
+                  className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+                >
+                  <div className="inline-flex items-center gap-2 px-6 py-2 bg-[#232323] rounded-full whitespace-nowrap">
+                    <motion.span
+                      initial={{ rotate: -10 }}
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 0.6, repeat: 1 }}
+                      className="text-lg font-black text-[#AFFF8A] [font-family:var(--font-nunito)]"
+                    >
+                      {comboText}
+                    </motion.span>
+                    <span className="text-lg font-black text-white [font-family:var(--font-nunito)]">
+                      x{comboCount}
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Progress */}
             <div className="flex items-center justify-center gap-2.5 mb-6">
               <div className="flex gap-1 flex-1 max-w-[1000px]">
@@ -568,98 +627,8 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
               </span>
             </div>
 
-            {/* Matching Grid / Completion */}
+            {/* Matching Grid */}
             <div className="px-[72px]">
-            {isGameComplete ? (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-12 bg-green-50 rounded-3xl border border-[#AFFF8A]"
-              >
-                <div className="flex justify-center mb-6">
-                  <CheckCircle2 className="w-20 h-20 text-[#5BB83F]" />
-                </div>
-                <h2 className="text-2xl font-bold text-[#232323] mb-6">太棒了！你完成了所有 {allPairs.length} 个{gameMode === "words" ? "单词" : "短语"}！</h2>
-                <button 
-                  onClick={() => startFullGame(gameMode, true)}
-                  className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
-                >
-                  重新开始
-                </button>
-              </motion.div>
-            ) : isStageComplete ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                {gameMode === "words" ? (
-                  <div className="rounded-3xl border border-[#AFFF8A] bg-white overflow-hidden">
-                    <div className="bg-[#AFFF8A] border-b border-[#232323] px-6 py-6 text-center">
-                      <CheckCircle2 className="w-16 h-16 text-[#232323] mx-auto mb-2" />
-                      <h2 className="text-2xl font-bold text-[#232323]">阶段 {currentStage} 完成！</h2>
-                      <p className="text-[#413F2D] text-sm mt-1">
-                        以下是你本阶段掌握的 {WORDS_PER_STAGE} 个单词及其例句
-                      </p>
-                    </div>
-                    <div className="divide-y divide-gray-100">
-                      {wordPool.map((pair, idx) => {
-                        const examples = WORD_EXAMPLES[pair.id];
-                        return (
-                          <div key={pair.id} className="px-5 py-4">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="w-7 h-7 rounded-full bg-[#ECECD9] text-[#1D2838] text-xs font-bold flex items-center justify-center shrink-0">
-                                {idx + 1}
-                              </span>
-                              <span className="text-lg font-black text-[#080808] [font-family:var(--font-nunito)]">{pair.left}</span>
-                              <span className="text-base text-[#8C8C6D] [font-family:var(--font-langyuan)]">{pair.right}</span>
-                            </div>
-                            {examples && (
-                              <div className="ml-10 space-y-1.5">
-                                {examples.map((ex, i) => (
-                                  <div key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-relaxed">
-                                    <span className="text-[#AFFF8A] mt-0.5 shrink-0">•</span>
-                                    <span className="flex-1">{highlightWordInText(ex, pair.left)}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => speakText(ex)}
-                                      className="shrink-0 text-gray-300 hover:text-[#5BB83F] transition-colors p-1"
-                                    >
-                                      <Volume2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="bg-[#FDFFF7] px-6 py-4 border-t border-[#ECECD9] text-center">
-                      <button
-                        onClick={handleNextStage}
-                        className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
-                      >
-                        进入阶段 {currentStage + 1}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 bg-[#ECECD9] rounded-3xl border border-[#AFFF8A]">
-                    <div className="flex justify-center mb-6">
-                      <CheckCircle2 className="w-20 h-20 text-[#5BB83F]" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#232323] mb-6">阶段 {currentStage} 完成！</h2>
-                    <p className="text-[#8C8C6D] mb-8 font-medium">你已经掌握了这 {WORDS_PER_STAGE} 个短语，继续挑战下一组吧！</p>
-                    <button
-                      onClick={handleNextStage}
-                      className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
-                    >
-                      进入阶段 {currentStage + 1}
-                    </button>
-                  </div>
-                )}
-              </motion.div>
-            ) : (
             <div className="grid grid-cols-2 gap-6 md:gap-12">
               {/* Left Column - English */}
               <div className="flex flex-col gap-4">
@@ -682,7 +651,7 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
                             }
                         }
                         transition={isSuccess
-                          ? { duration: 1.1, ease: "easeOut" }
+                          ? { duration: 0.3, ease: "easeOut" }
                           : { x: { duration: 0.4 } }
                         }
                         exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
@@ -729,7 +698,7 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
                             }
                         }
                         transition={isSuccess
-                          ? { duration: 1.1, ease: "easeOut" }
+                          ? { duration: 0.3, ease: "easeOut" }
                           : { x: { duration: 0.4 } }
                         }
                         exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
@@ -737,7 +706,7 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
                         whileTap={isSuccess ? undefined : { scale: 0.98 }}
                         onClick={() => handleItemClick(item)}
                         className={`
-                          p-4 rounded-full text-lg font-normal border transition-colors duration-200 text-center relative [font-family:var(--font-langyuan)]
+                          p-4 rounded-full text-lg font-normal border transition-colors duration-200 text-center relative ${gameMode === "phrases" ? "[font-family:var(--font-nunito)]" : "[font-family:var(--font-langyuan)]"}
                           ${isSuccess
                             ? 'bg-transparent border-transparent'
                             : isError 
@@ -755,7 +724,6 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
                 </AnimatePresence>
               </div>
             </div>
-            )}
             </div>
           </div>
         </>
@@ -763,22 +731,124 @@ export default function MatchingGame({ onInsideChange }: { onInsideChange?: (ins
         <SentenceForge />
       ) : gameMode === "dictation" ? (
         <DictationGame />
-      ) : gameMode === "writing" ? (
-        <WritingForge />
-      ) : null}
+      ) : (
+        <ChartChallenge />
+      )}
+
+      {/* Stage Complete Modal */}
+      <AnimatePresence>
+        {(isStageComplete || isGameComplete) ? (
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto"
+            >
+              {isGameComplete ? (
+                <div className="text-center py-12 px-6">
+                  <div className="flex justify-center mb-6">
+                    <CheckCircle2 className="w-20 h-20 text-[#5BB83F]" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#232323] mb-6">太棒了！你完成了所有 {allPairs.length} 个{gameMode === "words" ? "单词" : "短语"}！</h2>
+                  <button
+                    onClick={() => startFullGame(gameMode, true)}
+                    className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
+                  >
+                    重新开始
+                  </button>
+                </div>
+              ) : gameMode === "words" ? (
+                <div>
+                  <div className="bg-[#AFFF8A] rounded-t-3xl px-6 py-6 text-center">
+                    <CheckCircle2 className="w-16 h-16 text-[#232323] mx-auto mb-2" />
+                    <h2 className="text-2xl font-bold text-[#232323]">阶段 {currentStage} 完成！</h2>
+                    <p className="text-[#413F2D] text-sm mt-1">
+                      以下是你本阶段掌握的 {WORDS_PER_STAGE} 个单词及其例句
+                    </p>
+                  </div>
+                  <div className="divide-y divide-gray-100 max-h-[50vh] overflow-y-auto">
+                    {wordPool.map((pair, idx) => {
+                      const examples = WORD_EXAMPLES[pair.id];
+                      return (
+                        <div key={pair.id} className="px-5 py-4">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="w-7 h-7 rounded-full bg-[#ECECD9] text-[#1D2838] text-xs font-bold flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="text-lg font-black text-[#080808] [font-family:var(--font-nunito)]">{pair.left}</span>
+                            <span className="text-base text-[#8C8C6D] [font-family:var(--font-langyuan)]">{pair.right}</span>
+                          </div>
+                          {examples && (
+                            <div className="ml-10 space-y-1.5">
+                              {examples.map((ex, i) => (
+                                <div key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-relaxed">
+                                  <span className="text-[#AFFF8A] mt-0.5 shrink-0">•</span>
+                                  <span className="flex-1">{highlightWordInText(ex, pair.left)}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => speakText(ex)}
+                                    className="shrink-0 text-gray-300 hover:text-[#5BB83F] transition-colors p-1"
+                                  >
+                                    <Volume2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="bg-[#FDFFF7] rounded-b-3xl px-6 py-4 border-t border-[#ECECD9] text-center">
+                    <button
+                      onClick={handleNextStage}
+                      className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
+                    >
+                      进入阶段 {currentStage + 1}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 px-6">
+                  <div className="flex justify-center mb-6">
+                    <CheckCircle2 className="w-20 h-20 text-[#5BB83F]" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#232323] mb-6">阶段 {currentStage} 完成！</h2>
+                  <p className="text-[#8C8C6D] mb-8 font-medium">你已经掌握了这 {WORDS_PER_STAGE} 个短语，继续挑战下一组吧！</p>
+                  <button
+                    onClick={handleNextStage}
+                    className="px-8 py-3 bg-[#AFFF8A] border border-[#232323] text-[#232323] rounded-full font-bold text-lg hover:bg-[#98e87a] transition-colors active:scale-95"
+                  >
+                    进入阶段 {currentStage + 1}
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
       {/* Modal Overlay */}
       <AnimatePresence>
         {showModal && modalData && (
           <motion.div 
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           >
             <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.9, y: 10 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              exit={{ scale: 0.9, y: 10 }}
+              transition={{ duration: 0.15 }}
               className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 relative"
             >
               <button 

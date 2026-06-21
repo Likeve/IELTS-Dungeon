@@ -12,7 +12,13 @@ type ForgeProgress = {
   currentStage: number;
 };
 
-// Helper: Shuffle array
+// Helper: Strip leading capitalization and trailing punctuation for card display
+const normalizeChunkText = (text: string): string => {
+  let result = text;
+  result = result.replace(/^[A-Z]/, (match) => match.toLowerCase());
+  result = result.replace(/[.,!?:;]+$/, "");
+  return result;
+};
 const shuffle = <T,>(array: T[]): T[] => {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -168,111 +174,144 @@ export default function SentenceForge() {
         </span>
       </div>
 
-      {isGameComplete ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-12 bg-amber-50 rounded-3xl border-2 border-amber-200 shadow-sm"
-        >
-          <div className="flex justify-center mb-6">
-            <CheckCircle2 className="w-20 h-20 text-amber-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-amber-700 mb-6">太棒了！你通关了所有长难句锻造场！</h2>
-          <button 
-            onClick={restartGame}
-            className="px-8 py-3 bg-amber-500 text-white rounded-2xl font-bold text-lg hover:bg-amber-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
-          >
-            重新开始
-          </button>
-        </motion.div>
-      ) : isStageComplete ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-12 bg-green-50 rounded-3xl border-2 border-green-200 shadow-sm"
-        >
-          <div className="flex justify-center mb-6">
-            <Sparkles className="w-16 h-16 text-green-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-green-700 mb-4">句子锻造成功！</h2>
-          <div className="mb-8 px-6">
-            <p className="text-xl font-bold text-gray-800 mb-2">{currentSentence.english}</p>
-            <p className="text-lg text-gray-600 font-medium">{currentSentence.chinese}</p>
-          </div>
-          <button 
-            onClick={handleNextStage}
-            className="px-8 py-3 bg-green-500 text-white rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
-          >
-            进入下一关
-          </button>
-        </motion.div>
-      ) : (
-        <div className="flex flex-col gap-8">
-          {/* Top Area: Constructed Sentence */}
-          <div className="w-full bg-white/60 backdrop-blur-sm rounded-3xl p-6 min-h-[200px] border-2 border-dashed border-blue-200 shadow-inner flex flex-wrap content-start gap-3">
+      {/* Game Area - always visible */}
+      <div className="flex flex-col gap-8">
+        {/* Top Area: Constructed Sentence */}
+        <div className="w-full bg-white/60 rounded-3xl p-6 min-h-[200px] border-2 border-dashed border-blue-200 shadow-inner flex flex-wrap content-start gap-3">
+          <AnimatePresence>
+            {placedChunks.map((chunk) => (
+              <motion.button
+                key={chunk.id}
+                type="button"
+                layoutId={chunk.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1,
+                  boxShadow: "0 0 20px rgba(251, 191, 36, 0.5)"
+                }}
+                className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl text-lg font-bold bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-300 text-amber-900 text-center"
+              >
+                <span>{normalizeChunkText(chunk.text)}</span>
+                <motion.span 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="text-sm font-medium text-amber-700 mt-1"
+                >
+                  {chunk.meaning}
+                </motion.span>
+              </motion.button>
+            ))}
+          </AnimatePresence>
+          {placedChunks.length === 0 && (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 font-medium py-10">
+              点击下方的词块，按顺序拼出完整的句子
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Area: Available Chunks */}
+        <div className="bg-gray-50/80 rounded-3xl p-8 border-2 border-gray-100 shadow-sm">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <AnimatePresence>
-              {placedChunks.map((chunk) => (
+              {availableChunks.map((chunk) => (
                 <motion.button
                   key={chunk.id}
-                  type="button"
                   layoutId={chunk.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ 
-                    opacity: 1, 
-                    scale: 1,
-                    boxShadow: "0 0 20px rgba(251, 191, 36, 0.5)"
-                  }}
-                  className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl text-lg font-bold bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-300 text-amber-900 text-center"
+                  onClick={() => handleChunkClick(chunk)}
+                  animate={
+                    errorChunkId === chunk.id 
+                      ? { x: [-5, 5, -5, 5, 0], transition: { duration: 0.4 } } 
+                      : {}
+                  }
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`
+                    px-5 py-3 rounded-2xl text-lg font-bold border-2 transition-colors
+                    ${errorChunkId === chunk.id 
+                      ? 'bg-red-50 border-red-400 text-red-600' 
+                      : 'bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:shadow-md'}
+                  `}
                 >
-                  <span>{chunk.text}</span>
-                  <motion.span 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="text-sm font-medium text-amber-700 mt-1"
-                  >
-                    {chunk.meaning}
-                  </motion.span>
+                  {normalizeChunkText(chunk.text)}
                 </motion.button>
               ))}
             </AnimatePresence>
-            {placedChunks.length === 0 && (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 font-medium py-10">
-                点击下方的词块，按顺序拼出完整的句子
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Area: Available Chunks */}
-          <div className="bg-gray-50/80 rounded-3xl p-8 border-2 border-gray-100 shadow-sm">
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <AnimatePresence>
-                {availableChunks.map((chunk) => (
-                  <motion.button
-                    key={chunk.id}
-                    layoutId={chunk.id}
-                    onClick={() => handleChunkClick(chunk)}
-                    animate={
-                      errorChunkId === chunk.id 
-                        ? { x: [-5, 5, -5, 5, 0], transition: { duration: 0.4 } } 
-                        : {}
-                    }
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`
-                      px-5 py-3 rounded-2xl text-lg font-bold border-2 transition-colors
-                      ${errorChunkId === chunk.id 
-                        ? 'bg-red-50 border-red-400 text-red-600' 
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:shadow-md'}
-                    `}
-                  >
-                    {chunk.text}
-                  </motion.button>
-                ))}
-              </AnimatePresence>
-            </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Stage Complete Modal */}
+      <AnimatePresence>
+        {isStageComplete && !isGameComplete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={handleNextStage}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ type: "spring", duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-8 max-w-lg mx-4 shadow-2xl border-2 border-green-200"
+            >
+              <div className="flex justify-center mb-4">
+                <Sparkles className="w-16 h-16 text-green-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-green-700 text-center mb-4">句子锻造成功！</h2>
+              <div className="mb-6 px-4">
+                <p className="text-xl font-bold text-gray-800 mb-2 text-center">{currentSentence.english}</p>
+                <p className="text-lg text-gray-600 font-medium text-center">{currentSentence.chinese}</p>
+              </div>
+              <div className="flex justify-center">
+                <button 
+                  onClick={handleNextStage}
+                  className="px-8 py-3 bg-green-500 text-white rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
+                >
+                  进入下一关
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Game Complete Modal */}
+      <AnimatePresence>
+        {isGameComplete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ type: "spring", duration: 0.3 }}
+              className="bg-white rounded-3xl p-8 max-w-lg mx-4 shadow-2xl border-2 border-amber-200"
+            >
+              <div className="flex justify-center mb-4">
+                <CheckCircle2 className="w-20 h-20 text-amber-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-amber-700 text-center mb-6">太棒了！你通关了所有长难句锻造场！</h2>
+              <div className="flex justify-center">
+                <button 
+                  onClick={restartGame}
+                  className="px-8 py-3 bg-amber-500 text-white rounded-2xl font-bold text-lg hover:bg-amber-600 transition-colors shadow-md hover:shadow-lg active:scale-95"
+                >
+                  重新开始
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
