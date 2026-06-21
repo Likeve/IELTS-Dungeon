@@ -12,6 +12,22 @@ const PARAGRAPH_GOALS: Record<number, string> = {
   4: "Body Paragraph 2 — description of remaining groups with comparison structures (whereas/by contrast/meanwhile).",
 };
 
+function detectComparisonStructures(text: string): string[] {
+  const patterns = [
+    /\bwhereas\b/i,
+    /\bby contrast\b/i,
+    /\bmeanwhile\b/i,
+    /\bin comparison\b/i,
+    /\bcompared to\b/i,
+    /\bcompared with\b/i,
+    /\bsimilarly\b/i,
+    /\bon the other hand\b/i,
+    /\bhowever\b/i,
+    /\bwhile\b/i,
+  ];
+  return patterns.filter((p) => p.test(text)).map((p) => p.source.replace(/\\b/g, "").replace(/\/i$/, ""));
+}
+
 function buildAIPrompt(
   paragraphNumber: number,
   userText: string,
@@ -20,12 +36,15 @@ function buildAIPrompt(
   keywords: string[]
 ): string {
   const goal = PARAGRAPH_GOALS[paragraphNumber] || "IELTS Task 1 paragraph";
+  const comparisonStructures = detectComparisonStructures(userText);
+
   return `You are an IELTS Band 9 writing coach. Evaluate this Task 1 paragraph.
 
 Chart: "${chartTitle}"
 Task question: "${chartQuestion}"
 Paragraph type: ${goal}
 Expected keywords: ${keywords.join(", ")}
+Detected comparison structures: ${comparisonStructures.join(", ") || "none"}
 
 Student's paragraph:
 """
@@ -37,8 +56,12 @@ Evaluate it and respond with ONLY a JSON object (no markdown, no extra text):
   "band": number (estimate 0-9, can be .5),
   "strengths": string[] (2-3 specific positives),
   "issues": string[] (2-3 specific problems),
-  "suggestions": string[] (2-3 actionable fixes),
-  "keywordUsage": { "used": string[], "missing": string[] }
+  "suggestions": string[] (2-3 actionable fixes in Chinese),
+  "keywordUsage": { "used": string[], "missing": string[] },
+  "errorTags": string[] (choose from: ["data_missing", "weak_comparison", "weak_overview", "grammar_issue", "repetition", "off_topic", "too_short", "no_paraphrase"]),
+  "band8Rewrite": string (a Band 8+ rewritten version of this paragraph, keeping the same information but improving vocabulary, grammar, and structure),
+  "hasComparison": boolean (true if user used comparison structures correctly),
+  "hasData": boolean (true if user included specific data/numbers)
 }`;
 }
 
@@ -58,6 +81,10 @@ function parseAIResponse(text: string): EvaluationResult | null {
         used: Array.isArray(json.keywordUsage?.used) ? json.keywordUsage.used : [],
         missing: Array.isArray(json.keywordUsage?.missing) ? json.keywordUsage.missing : [],
       },
+      errorTags: Array.isArray(json.errorTags) ? json.errorTags : [],
+      band8Rewrite: typeof json.band8Rewrite === "string" ? json.band8Rewrite : "",
+      hasComparison: json.hasComparison === true,
+      hasData: json.hasData === true,
       source: "ai",
     };
   } catch {
@@ -71,6 +98,10 @@ interface EvaluationResult {
   issues: string[];
   suggestions: string[];
   keywordUsage: { used: string[]; missing: string[] };
+  errorTags: string[];
+  band8Rewrite: string;
+  hasComparison: boolean;
+  hasData: boolean;
   source: "ai" | "local";
 }
 
@@ -89,6 +120,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
+    const comparisonStructures = detectComparisonStructures(userText);
+    const hasData = /\b\d+(\.\d+)?%?\b/.test(userText);
+
     if (AI_API_URL && AI_API_KEY) {
       const prompt = buildAIPrompt(paragraphNumber, userText, chartTitle, chartQuestion, keywords || []);
 
@@ -105,10 +139,10 @@ export async function POST(req: NextRequest) {
               { role: "user", content: `You are an IELTS writing coach. Always respond with valid JSON only.\n\n${prompt}` },
             ],
             temperature: 0.3,
-            max_tokens: 500,
+            max_tokens: 2000,
             thinking: { type: "disabled" },
           }),
-          signal: AbortSignal.timeout(15000),
+          signal: AbortSignal.timeout(20000),
         });
 
         if (res.ok) {
@@ -122,13 +156,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Local evaluation fallback
     const bandResult = evaluateEssay(userText, `Task 1: ${chartTitle}\n${chartQuestion}`);
+    const errorTags: string[] = [];
+    if (userText.trim().split(/\s+/).length < 20) errorTags.push("too_short");
+    if (!hasData && paragraphNumber >= 3) errorTags.push("data_missing");
+    if (comparisonStructures.length === 0 && paragraphNumber === 4) errorTags.push("weak_comparison");
+    if (paragraphNumber === 1 && userText.toLowerCase().includes(chartTitle.toLowerCase().slice(0, 15))) errorTags.push("no_paraphrase");
+
     const localResult: EvaluationResult = {
       band: bandResult.band,
       strengths: [],
-      issues: [],
+      issues: errorTags.map(tagToIssue),
       suggestions: bandResult.tips.slice(0, 4),
       keywordUsage: { used: [], missing: [] },
+      errorTags,
+      band8Rewrite: "",
+      hasComparison: comparisonStructures.length > 0,
+      hasData,
       source: "local",
     };
 
@@ -152,4 +197,18 @@ export async function POST(req: NextRequest) {
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
+}
+
+function tagToIssue(tag: string): string {
+  const map: Record<string, string> = {
+    data_missing: "缺少具体数据支撑",
+    weak_comparison: "缺少对比结构",
+    weak_overview: "Overview 段落缺少全局概括",
+    grammar_issue: "存在语法错误",
+    repetition: "词汇或句式重复",
+    off_topic: "偏离图表主题",
+    too_short: "段落过短，需要展开",
+    no_paraphrase: "未改写原题，请用同义词替换",
+  };
+  return map[tag] || tag;
 }
