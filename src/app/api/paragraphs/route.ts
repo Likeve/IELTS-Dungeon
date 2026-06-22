@@ -7,7 +7,7 @@ const FILE_PATH = path.join(process.cwd(), "src/data/ieltsChartsParagraphs.ts");
 export async function GET() {
   try {
     const raw = fs.readFileSync(FILE_PATH, "utf-8");
-    const match = raw.match(/export const PARAGRAPHS_DATA: Record<string, ChartParagraphs> = (\{[\s\S]*?\n\});/);
+    const match = raw.match(/export const PARAGRAPHS_DATA: Record<string, ChartParagraphs> = (\{[\s\S]*?\n\};)/);
     if (!match || !match[1]) {
       return NextResponse.json({ error: "Could not parse PARAGRAPHS_DATA from file" }, { status: 500 });
     }

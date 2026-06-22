@@ -15,6 +15,37 @@ import { ParagraphWritingData } from "@/data/ieltsChartsParagraphs";
 
 const STORAGE_KEY = "ielts_writing_progress";
 
+function shuffleArray<T>(arr: T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function shuffleQuestionsAndOptions(
+  questions: { id: string; question: string; options: string[]; correctAnswer: string }[]
+): { id: string; question: string; options: string[]; correctAnswer: string }[] {
+  const letters = ["A", "B", "C", "D"];
+  // 1. 打乱题目顺序
+  const shuffledQuestions = shuffleArray(questions);
+  // 2. 打乱每个题目的选项顺序并更新 correctAnswer
+  return shuffledQuestions.map((q) => {
+    const optionTexts = q.options.map((opt) => {
+      const match = opt.match(/^[A-D]\s+(.+)$/);
+      return match ? match[1] : opt;
+    });
+    const correctIdx = letters.indexOf(q.correctAnswer);
+    const correctText = correctIdx >= 0 ? optionTexts[correctIdx] : optionTexts[0];
+    const shuffledTexts = shuffleArray(optionTexts);
+    const newCorrectIdx = shuffledTexts.indexOf(correctText);
+    const newCorrect = newCorrectIdx >= 0 ? letters[newCorrectIdx] : q.correctAnswer;
+    const newOptions = shuffledTexts.map((text, i) => `${letters[i]} ${text}`);
+    return { ...q, options: newOptions, correctAnswer: newCorrect };
+  });
+}
+
 interface StoredProgress {
   unlocked: Record<string, number[]>;
   xp: number;
@@ -245,10 +276,11 @@ export default function ChartChallenge() {
     const key = `paragraph${paragraph}` as keyof typeof chartParagraphs;
     const pd = chartParagraphs[key];
     if (!pd) return;
+    const shuffledQuestions = shuffleQuestionsAndOptions(pd.questions);
     setStageData({
       prompt: pd.prompt,
       instruction: pd.instruction,
-      questions: pd.questions,
+      questions: shuffledQuestions,
       keywords: pd.keywords,
       tips: pd.tips,
       source: "local",
