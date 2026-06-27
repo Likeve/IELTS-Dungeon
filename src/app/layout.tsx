@@ -8,6 +8,11 @@ const langyuan = localFont({
   variable: "--font-langyuan",
 });
 
+const eduHandBold = localFont({
+  src: "../../public/Fonts/EduAUVICWANTHand-Bold.ttf",
+  variable: "--font-edu-hand-bold",
+});
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -21,7 +26,7 @@ const geistMono = Geist_Mono({
 const nunito = Nunito({
   variable: "--font-nunito",
   subsets: ["latin"],
-  weight: ["900"],
+  weight: ["400", "500", "600", "700", "900"],
 });
 
 export const metadata: Metadata = {
@@ -40,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} ${langyuan.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} ${langyuan.variable} ${eduHandBold.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

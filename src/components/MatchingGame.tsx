@@ -544,7 +544,7 @@ export default function MatchingGame({ initialGameMode, onInsideChange }: { init
   }
 
   return (
-    <div className="w-full mx-auto p-8">
+    <>
       {/* Back Button (hidden for chart mode) */}
       {gameMode !== "chart" && (
         <button
@@ -1020,6 +1020,6 @@ export default function MatchingGame({ initialGameMode, onInsideChange }: { init
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

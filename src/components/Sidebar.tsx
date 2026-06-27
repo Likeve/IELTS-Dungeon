@@ -39,11 +39,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
       <aside className="hidden md:flex w-40 shrink-0 flex-col border-r border-[#F4F4F4] bg-[#FFFCF4] px-4 py-6 gap-6 h-screen sticky top-0">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-0">
-          <div className="w-6 h-6 flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M12 3L20 11L12 19L4 11L12 3Z" fill="#AFFF8A" stroke="#232323" strokeWidth="1.5"/>
-            </svg>
-          </div>
+          <img src="/logo.svg" alt="Yasee" className="w-6 h-6" />
           <span className="text-2xl font-black text-[#1D2838]">Yasee</span>
         </div>
 
