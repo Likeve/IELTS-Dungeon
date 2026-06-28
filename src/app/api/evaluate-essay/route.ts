@@ -11,7 +11,7 @@ function buildFullEssayPrompt(
   chartQuestion: string
 ): string {
   const essay = paragraphs.filter(Boolean).join("\n\n");
-  return `You are an IELTS Band 9 writing coach. Evaluate this complete IELTS Task 1 report.
+  return `You are an IELTS Band 9 writing coach. Evaluate this complete IELTS Task 1 report. IMPORTANT: strengths, issues, and suggestions MUST be written in Chinese (简体中文). The band8Rewrite MUST be in English.
 
 Chart: "${chartTitle}"
 Task question: "${chartQuestion}"
@@ -24,11 +24,11 @@ ${essay}
 Evaluate the complete report and respond with ONLY a JSON object (no markdown, no extra text):
 {
   "band": number (overall band 0-9, can be .5),
-  "strengths": string[] (3-4 specific positives),
-  "issues": string[] (3-4 specific problems),
-  "suggestions": string[] (3-4 actionable fixes in Chinese),
+  "strengths": string[] (3-4 specific positives, write in Chinese),
+  "issues": string[] (3-4 specific problems, write in Chinese),
+  "suggestions": string[] (3-4 actionable fixes, write in Chinese),
   "errorTags": string[] (choose from: ["data_missing", "weak_comparison", "weak_overview", "grammar_issue", "repetition", "off_topic", "too_short", "no_paraphrase", "poor_cohesion"]),
-  "band8Rewrite": string (a Band 8+ rewritten version of the full report, keeping the same information but improving vocabulary, grammar, and structure),
+  "band8Rewrite": string (a Band 8+ rewritten version of the full report in English, keeping the same information but improving vocabulary, grammar, and structure),
   "paragraphBands": number[] (band score for each of the 4 paragraphs in order)
 }`;
 }

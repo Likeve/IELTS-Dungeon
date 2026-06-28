@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send } from "lucide-react";
+import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Chart as ChartJS,
@@ -20,10 +20,91 @@ import {
   LineChartData, BarChartData, PieChartData, TableData, FlowchartData,
 } from "@/data/ieltsCharts";
 import { ParagraphWritingData } from "@/data/ieltsChartsParagraphs";
+import { findAutocomplete } from "@/data/wordBank";
+
+
+const STAGE_COMPLETE_MESSAGES = [
+  "🎉 线索收集完成！现在试着把题目改写成你的 Introduction 吧！",
+  "✍️ 太棒了！利用刚刚收集到的线索，写出你的雅思写作第一段 Introduction。",
+  "🚀 准备就绪！现在开始改写题目，完成你的 Introduction 吧！",
+  "💡 所有线索已解锁！用它们来完成你的 Introduction 第一段。",
+  "🌟 线索已备齐！试着把题目换种说法，写出属于你的 Introduction。",
+  "🎯 第一步完成！接下来，把题目改写成一个清晰自然的 Introduction。",
+  "📚 你的素材已经准备好了，现在开始撰写 Introduction 吧！",
+  "⚡ 线索收集成功！把它们组合起来，完成你的第一段 Introduction。",
+  "🏆 干得漂亮！现在轮到你改写题目，写出雅思写作的开头啦！",
+  "✨ 挑战开始！根据刚刚收集的线索，完成你的 Introduction。",
+];
 
 const STORAGE_KEY = "ielts_writing_progress";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+
+const SHARD_COLORS = ["#AFFF8A", "#98E87A", "#82D46A", "#B8FF9E", "#6ECF54", "#5BB83F"];
+
+function ParticleBurst() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState({ w: 140, h: 48 });
+
+  useEffect(() => {
+    const el = ref.current?.parentElement;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      setRect({ w: r.width, h: r.height });
+    }
+  }, []);
+
+  const cols = 5;
+  const rows = 4;
+  const total = cols * rows;
+
+  const particles = useMemo(() => {
+    return Array.from({ length: total }).map((_, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const startX = (col / (cols - 1) - 0.5) * rect.w * 0.85;
+      const startY = (row / (rows - 1) - 0.5) * rect.h * 0.85;
+      const outAngle = Math.atan2(startY, startX);
+      const spreadAngle = outAngle + (Math.random() - 0.5) * 0.25;
+      const baseDist = Math.max(rect.w, rect.h) * 0.5;
+      const distance = baseDist + Math.random() * baseDist * 0.6;
+      const endX = Math.cos(spreadAngle) * distance;
+      const endY = Math.sin(spreadAngle) * distance;
+      const w = 6 + Math.random() * 6;
+      const h = 3 + Math.random() * 4;
+      const rotation = outAngle * (180 / Math.PI) + (Math.random() - 0.5) * 30;
+      return { startX, startY, endX, endY, w, h, rotation, color: SHARD_COLORS[i % SHARD_COLORS.length] };
+    });
+  }, [rect]);
+
+  return (
+    <div ref={ref} className="absolute inset-0 pointer-events-none overflow-visible z-10">
+      {particles.map((p, i) => (
+        <motion.div
+          key={i}
+          initial={{ x: p.startX, y: p.startY, scale: 1, opacity: 1, rotate: 0 }}
+          animate={{
+            x: p.endX,
+            y: p.endY,
+            scale: 0.1,
+            opacity: 0,
+            rotate: p.rotation,
+          }}
+          transition={{
+            duration: 1.1,
+            ease: "easeOut",
+          }}
+          className="absolute inset-0 m-auto rounded-[2px]"
+          style={{
+            width: p.w,
+            height: p.h,
+            backgroundColor: p.color,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 function useSvgScale(viewBoxW: number, viewBoxH: number) {
   const ref = useRef<HTMLDivElement>(null);
@@ -419,8 +500,11 @@ export default function ChartChallenge() {
   const [essayEvaluation, setEssayEvaluation] = useState<EssayEvaluation | null>(null);
   const [showEssayResult, setShowEssayResult] = useState(false);
   const [showParagraphResult, setShowParagraphResult] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [stageCompleteMessage, setStageCompleteMessage] = useState("");
 
   const shuffledRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetch("/api/charts")
@@ -501,8 +585,16 @@ export default function ChartChallenge() {
     setParagraphInput(paragraphInputs[activeParagraph] || "");
   }, [activeParagraph, paragraphInputs]);
 
+  useEffect(() => {
+    if (stageComplete) {
+      setStageCompleteMessage(STAGE_COMPLETE_MESSAGES[Math.floor(Math.random() * STAGE_COMPLETE_MESSAGES.length)]);
+    }
+  }, [stageComplete]);
+
   const totalQuestions = shuffledQuestions.length;
   const currentQ = shuffledQuestions[currentQuestionIndex] || null;
+
+  const [burstKey, setBurstKey] = useState<string | null>(null);
 
   const handleAnswer = (optKey: string) => {
     if (!currentQ || questionFeedback[currentQ.id]) return;
@@ -514,12 +606,22 @@ export default function ChartChallenge() {
       if (clue && !discoveredClues.includes(clue)) {
         setDiscoveredClues((prev) => [...prev, clue]);
       }
+      // Play success sound effect
+      try {
+        const audio = new Audio("/Audios/matched.mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+      } catch {
+        // ignore
+      }
+      setBurstKey(`${currentQ.id}-${optKey}`);
       setTimeout(() => {
         if (currentQuestionIndex < totalQuestions - 1) {
           setCurrentQuestionIndex((prev) => prev + 1);
         } else {
           setStageComplete(true);
         }
+        setBurstKey(null);
       }, 800);
     }
   };
@@ -686,6 +788,37 @@ export default function ChartChallenge() {
 
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
+            {/* Right: Clues panel */}
+            <div className="w-full lg:w-[399px] shrink-0 bg-[#F7F7F1] rounded-3xl p-4 flex flex-col gap-3 min-h-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] whitespace-nowrap" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif", color: "#64725D" }}>
+                  🧩 {stageComplete ? "线索收集完成" : "已发现线索"} {discoveredClues.length}/{totalQuestions}
+                </span>
+              </div>
+
+              {discoveredClues.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {discoveredClues.map((clue, i) => (
+                    <div key={i} className="p-3 rounded-2xl h-fit flex items-start gap-2" style={{ backgroundColor: "#EAEADE" }}>
+                      <span className="text-[12px] font-black text-[#64725D] shrink-0" style={{ fontFamily: "Nunito, sans-serif" }}>
+                        {i + 1}.
+                      </span>
+                      <p className="text-[13px] font-bold text-[#2D2D2D] leading-relaxed" style={{ fontFamily: "Nunito, sans-serif" }}>
+                        {clue}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-3 flex-1">
+                  <GrayStar />
+                  <p className="text-[11px] text-center" style={{ color: "#949478", fontFamily: "PingFang SC, sans-serif" }}>
+                    选择答案<br />期待你发现线索哦～
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Left: Question area */}
             <div className="flex-1 bg-[#F7F7F1] rounded-3xl p-4 flex flex-col min-w-0 min-h-0">
 
@@ -721,10 +854,11 @@ export default function ChartChallenge() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
                       transition={{ duration: 0.25 }}
-                      className="px-4 py-3 rounded-2xl bg-[#ECFDF5] shrink-0 self-start inline-block"
+                      className="px-4 py-3 rounded-full shrink-0 self-start inline-flex items-center gap-2 border-[1.5px] border-[#262626]"
+                      style={{ backgroundColor: "#AFFF8A" }}
                     >
-                      <p className="text-[14px] font-bold text-[#065F46] whitespace-nowrap" style={{ fontFamily: "Nunito, sans-serif" }}>
-                        🎉 Stage Complete — 所有线索已收集！
+                      <p className="text-[14px] font-bold text-[#232323] whitespace-nowrap" style={{ fontFamily: "Nunito, sans-serif" }}>
+                        {stageCompleteMessage}
                       </p>
                     </motion.div>
                   ) : null}
@@ -762,15 +896,20 @@ export default function ChartChallenge() {
                         if (fb && isCorrectAnswer) { bg = "#ECFDF5"; textColor = "#065F46"; border = "2px solid #065F46"; shadow = "0px 4px 0px #A7F3D0"; }
                         else if (fb) { bg = "#F5F5F0"; textColor = "#9CA3AF"; border = "2px solid #D4D4C8"; shadow = "none"; }
 
+                        const showBurst = burstKey === `${currentQ.id}-${optKey}`;
+
                         return (
                           <button
                             key={oi}
                             onClick={() => handleAnswer(optKey)}
                             disabled={!!fb}
-                            className="flex flex-row justify-center items-center gap-3 px-4 py-3 rounded-full text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default"
+                            className={`flex flex-row justify-center items-center gap-3 px-4 py-3 rounded-full text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default relative ${isCorrectAnswer && fb ? "opacity-0" : ""}`}
                             style={{ backgroundColor: bg, color: textColor, fontFamily: "Nunito, sans-serif", border, boxShadow: shadow }}
                           >
-                            {opt.replace(/^[A-D]\s+/, "")}
+                            {showBurst && <ParticleBurst />}
+                            <span className={isCorrectAnswer && fb ? "invisible" : ""}>
+                              {opt.replace(/^[A-D]\s+/, "")}
+                            </span>
                           </button>
                         );
                       })}
@@ -779,12 +918,65 @@ export default function ChartChallenge() {
                     <div className="flex flex-col gap-2.5 shrink-0">
                       <div className="flex flex-col gap-2.5 p-4 rounded-3xl border-[1.5px] h-[140px] min-h-[140px]" style={{ backgroundColor: "#F7F7F1", borderColor: "#363636", boxShadow: "0px 4px 0px 0px rgba(232, 232, 220, 1)" }}>
                         <textarea
+                          ref={textareaRef}
                           value={paragraphInput}
-                          onChange={(e) => setParagraphInput(e.target.value)}
+                          onChange={(e) => {
+                            setParagraphInput(e.target.value);
+                            // Update suggestion based on current word
+                            const el = textareaRef.current;
+                            if (!el || el.selectionStart === null) return;
+                            const v = e.target.value;
+                            const start = el.selectionStart;
+                            const textBeforeCursor = v.slice(0, start);
+                            const wordStart = textBeforeCursor.search(/\S+$/);
+                            const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
+                            const autocompleteContext = {
+                              chartTitle: currentChart?.title,
+                              chartQuestion: currentChart?.question,
+                              chartType: currentChart?.type,
+                              keywords: currentStageData?.keywords,
+                              clues: discoveredClues,
+                              paragraphNumber: activeParagraph,
+                              textBeforeCursor: textBeforeCursor,
+                            };
+                            setSuggestion(currentWord ? findAutocomplete(currentWord, autocompleteContext) : null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Tab" && suggestion) {
+                              e.preventDefault();
+                              const el = textareaRef.current;
+                              if (!el || el.selectionStart === null) return;
+                              const start = el.selectionStart;
+                              // Recompute current word at cursor
+                              const textBeforeCursor = paragraphInput.slice(0, start);
+                              const wordStart = textBeforeCursor.search(/\S+$/);
+                              const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
+                              const tail = suggestion.slice(currentWord.length);
+                              const newText =
+                                paragraphInput.slice(0, start) + tail + paragraphInput.slice(start);
+                              setParagraphInput(newText);
+                              setSuggestion(null);
+                              setTimeout(() => {
+                                const newCursor = start + tail.length;
+                                el.setSelectionRange(newCursor, newCursor);
+                              }, 0);
+                            }
+                          }}
                           placeholder="The line graph illustrates..."
                           className="w-full flex-1 min-h-0 bg-transparent resize-none outline-none text-[14px] font-bold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
                           style={{ fontFamily: "Nunito, sans-serif" }}
                         />
+                        {/* Suggestion preview */}
+                        {suggestion && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ECECD9] w-fit">
+                            <span
+                              className="text-[12px] font-bold text-[#64725D]"
+                              style={{ fontFamily: "Nunito, sans-serif" }}
+                            >
+                              Tab 补全: <span className="text-[#232323]">{suggestion}</span>
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-end justify-between gap-3">
                           <span className="text-[12px] font-medium leading-[22px]" style={{ color: "#A7A794", fontFamily: "PingFang SC, sans-serif" }}>
                             字词数: <span style={{ color: "#2C2C2C" }}>{paragraphInput.trim().split(/\s+/).filter(Boolean).length}</span>
@@ -823,34 +1015,6 @@ export default function ChartChallenge() {
               </div>
               </div>
             </div>
-
-            {/* Right: Clues panel */}
-            <div className="w-full lg:w-[399px] shrink-0 bg-[#F7F7F1] rounded-3xl p-4 flex flex-col gap-3 min-h-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] whitespace-nowrap" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif", color: "#64725D" }}>
-                  🧩 已发现线索
-                </span>
-              </div>
-
-              {discoveredClues.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  {discoveredClues.map((clue, i) => (
-                    <div key={i} className="p-3 rounded-2xl h-fit self-start" style={{ backgroundColor: "#EAEADE" }}>
-                      <p className="text-[13px] font-bold text-[#2D2D2D] leading-relaxed" style={{ fontFamily: "Nunito, sans-serif" }}>
-                        {clue}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-3 flex-1">
-                  <GrayStar />
-                  <p className="text-[11px] text-center" style={{ color: "#949478", fontFamily: "PingFang SC, sans-serif" }}>
-                    选择答案<br />期待你发现线索哦～
-                  </p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -871,7 +1035,7 @@ export default function ChartChallenge() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 16 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-white rounded-3xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto shadow-2xl"
+                  className="bg-white rounded-3xl p-6 w-full max-w-[720px] max-h-[80vh] overflow-y-auto shadow-2xl"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -888,26 +1052,51 @@ export default function ChartChallenge() {
 
                   {(() => {
                     const ev = paragraphEvaluations[activeParagraph];
-                    const passed = ev.band > 4.5;
+                    const starRating = Math.max(1, Math.min(5, Math.round(ev.band / 9 * 5 * 2) / 2));
+                    const passed = starRating > 2.5;
+                    const fullStars = Math.floor(starRating);
+                    const hasHalfStar = starRating % 1 >= 0.5;
+                    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
                     return (
                       <>
                         <div className="flex items-baseline gap-2 mb-5">
                           <span className="text-[14px] font-bold text-[#64725D]" style={{ fontFamily: "Nunito, sans-serif" }}>
                             得分:
                           </span>
-                          <span className={`text-[36px] font-black ${passed ? "text-[#52B543]" : "text-[#EF4444]"}`} style={{ fontFamily: "Nunito, sans-serif" }}>
-                            {ev.band.toFixed(1)}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: fullStars }).map((_, i) => (
+                              <Star key={`full-${i}`} className="w-6 h-6 text-[#F5C518] fill-[#F5C518]" />
+                            ))}
+                            {hasHalfStar && (
+                              <div className="relative w-6 h-6">
+                                <Star className="absolute inset-0 w-6 h-6 text-[#D4D4C8] fill-[#D4D4C8]" />
+                                <div className="absolute inset-0 overflow-hidden w-[50%]">
+                                  <Star className="w-6 h-6 text-[#F5C518] fill-[#F5C518]" />
+                                </div>
+                              </div>
+                            )}
+                            {Array.from({ length: emptyStars }).map((_, i) => (
+                              <Star key={`empty-${i}`} className="w-6 h-6 text-[#D4D4C8] fill-[#D4D4C8]" />
+                            ))}
+                          </div>
                           <span className="text-[14px] text-[#64725D]" style={{ fontFamily: "Nunito, sans-serif" }}>
-                            / 9.0
+                            {starRating.toFixed(1)} / 5
                           </span>
                         </div>
 
                         {!passed && (
                           <p className="text-[13px] text-[#EF4444] mb-4" style={{ fontFamily: "PingFang SC, sans-serif" }}>
-                            需要高于 4.5 分才能进入下一关，请根据建议修改后重新提交。
+                            需要达到 3 星以上才能进入下一关，请根据建议修改后重新提交。
                           </p>
                         )}
+
+                        {/* User's original paragraph */}
+                        <div className="mb-4">
+                          <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>你的段落</h4>
+                          <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                            {paragraphInputs[activeParagraph] || ""}
+                          </p>
+                        </div>
 
                         {ev.strengths.length > 0 && (
                           <div className="mb-4">
@@ -951,7 +1140,7 @@ export default function ChartChallenge() {
                         {ev.band8Rewrite && (
                           <div className="mb-2">
                             <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>Band 8+ 改写参考</h4>
-                            <p className="text-[12px] text-[#64725D] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                            <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
                               {ev.band8Rewrite}
                             </p>
                           </div>
@@ -1008,7 +1197,7 @@ export default function ChartChallenge() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 16 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-white rounded-3xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto shadow-2xl"
+                  className="bg-white rounded-3xl p-6 w-full max-w-[720px] max-h-[80vh] overflow-y-auto shadow-2xl"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -1079,7 +1268,7 @@ export default function ChartChallenge() {
                   {essayEvaluation.band8Rewrite && (
                     <div className="mb-2">
                       <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>Band 8+ 改写参考</h4>
-                      <p className="text-[12px] text-[#64725D] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                      <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
                         {essayEvaluation.band8Rewrite}
                       </p>
                     </div>

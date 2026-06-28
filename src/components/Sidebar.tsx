@@ -36,7 +36,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
   return (
     <>
       {/* Desktop: Left Sidebar */}
-      <aside className="hidden md:flex w-40 shrink-0 flex-col border-r border-[#F4F4F4] bg-[#FFFCF4] px-4 py-6 gap-6 h-screen sticky top-0">
+      <aside className="hidden md:flex w-fit shrink-0 flex-col border-r border-[#F4F4F4] bg-[#FFFCF4] px-4 py-6 gap-6 h-screen sticky top-0">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-0">
           <img src="/logo.svg" alt="Yasee" className="w-6 h-6" />
@@ -44,7 +44,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
         </div>
 
         {/* Nav Items */}
-        <div className="flex flex-col gap-1 flex-1">
+        <div className="flex flex-col gap-1 flex-1 items-start">
           {categories.map((cat) => {
             const isActive = active === cat.id;
             const isWriting = cat.id === "writing";
@@ -60,14 +60,14 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                   }}
                   whileHover={isActive ? {} : { scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-full text-sm transition-all ${
+                  className={`w-fit flex items-center gap-3 px-4 py-3.5 rounded-full text-sm transition-all ${
                     isActive
                       ? "bg-[#F3FAE3] text-black font-black"
                       : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
                   }`}
                 >
                   <cat.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-[#232323]" : "text-[#808771]"}`} />
-                  <span className="whitespace-nowrap flex-1 text-left">{cat.label}</span>
+                  <span className="whitespace-nowrap text-left">{cat.label}</span>
                   {isWriting && (
                     <motion.div
                       animate={{ rotate: writingExpanded ? 180 : 0 }}
@@ -101,7 +101,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                                 }}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.97 }}
-                                className={`w-full text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
+                                className={`w-fit text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
                                   isSubActive
                                     ? "bg-[#ECECD9] text-[#080808] font-black"
                                     : "text-[#808771] font-medium hover:bg-[#F9F6ED]"

@@ -38,7 +38,7 @@ function buildAIPrompt(
   const goal = PARAGRAPH_GOALS[paragraphNumber] || "IELTS Task 1 paragraph";
   const comparisonStructures = detectComparisonStructures(userText);
 
-  return `You are an IELTS Band 9 writing coach. Evaluate this Task 1 paragraph.
+  return `You are an IELTS Band 9 writing coach. Evaluate this Task 1 paragraph. IMPORTANT: strengths, issues, and suggestions MUST be written in Chinese (简体中文). The band8Rewrite MUST be in English.
 
 Chart: "${chartTitle}"
 Task question: "${chartQuestion}"
@@ -54,12 +54,12 @@ ${userText}
 Evaluate it and respond with ONLY a JSON object (no markdown, no extra text):
 {
   "band": number (estimate 0-9, can be .5),
-  "strengths": string[] (2-3 specific positives),
-  "issues": string[] (2-3 specific problems),
-  "suggestions": string[] (2-3 actionable fixes in Chinese),
+  "strengths": string[] (2-3 specific positives, write in Chinese),
+  "issues": string[] (2-3 specific problems, write in Chinese),
+  "suggestions": string[] (2-3 actionable fixes, write in Chinese),
   "keywordUsage": { "used": string[], "missing": string[] },
   "errorTags": string[] (choose from: ["data_missing", "weak_comparison", "weak_overview", "grammar_issue", "repetition", "off_topic", "too_short", "no_paraphrase"]),
-  "band8Rewrite": string (a Band 8+ rewritten version of this paragraph, keeping the same information but improving vocabulary, grammar, and structure),
+  "band8Rewrite": string (a Band 8+ rewritten version of this paragraph in English, keeping the same information but improving vocabulary, grammar, and structure),
   "hasComparison": boolean (true if user used comparison structures correctly),
   "hasData": boolean (true if user included specific data/numbers)
 }`;
