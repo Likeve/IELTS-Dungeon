@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ParametricMapChart from "./ParametricMapChart";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,17 +43,18 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const SHARD_COLORS = ["#AFFF8A", "#98E87A", "#82D46A", "#B8FF9E", "#6ECF54", "#5BB83F"];
 
-function ParticleBurst() {
+function ParticleBurst({ size }: { size?: { w: number; h: number } }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [rect, setRect] = useState({ w: 140, h: 48 });
+  const [rect, setRect] = useState(size || { w: 140, h: 48 });
 
   useEffect(() => {
+    if (size) { setRect(size); return; }
     const el = ref.current?.parentElement;
     if (el) {
       const r = el.getBoundingClientRect();
       setRect({ w: r.width, h: r.height });
     }
-  }, []);
+  }, [size]);
 
   const cols = 5;
   const rows = 4;
@@ -450,7 +452,8 @@ const renderChart = (item: ChartItem) => {
     case "bar": return <BarChartSVG data={item.data as BarChartData} />;
     case "pie": return <PieChartSVG data={item.data as PieChartData} />;
     case "table": return <TableChart data={item.data as TableData} />;
-    case "map": case "flowchart": return <FlowChartSVG data={item.data as FlowchartData} />;
+    case "map": return <ParametricMapChart data={item.data as FlowchartData} />;
+    case "flowchart": return <FlowChartSVG data={item.data as FlowchartData} />;
   }
 };
 
@@ -502,6 +505,10 @@ export default function ChartChallenge() {
   const [showParagraphResult, setShowParagraphResult] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [stageCompleteMessage, setStageCompleteMessage] = useState("");
+  const [expressions, setExpressions] = useState<string[]>([]);
+  const [expressionsLoading, setExpressionsLoading] = useState(false);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [hoveredExpr, setHoveredExpr] = useState<string | null>(null);
 
   const shuffledRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -551,34 +558,28 @@ export default function ChartChallenge() {
     return cp[key] || null;
   }, [currentChart, paragraphsData, activeParagraph]);
 
-  const resetStage = useCallback(() => {
+  // Reset stage and prepare new shuffled questions when chartKey changes
+  useEffect(() => {
+    setParagraphInput("");
+    setParagraphInputs({});
+    setParagraphEvaluations({});
     setCurrentQuestionIndex(0);
     setQuestionFeedback({});
     setDiscoveredClues([]);
-    setShuffledQuestions([]);
     setStageComplete(false);
-    setParagraphInput((prev) => {
-      // Save current paragraph input before switching
-      if (activeParagraph && prev.trim()) {
-        setParagraphInputs((inputs) => ({ ...inputs, [activeParagraph]: prev }));
-      }
-      return "";
-    });
+    setExpressions([]);
+    setActiveParagraph(1);
     shuffledRef.current = false;
-  }, [activeParagraph]);
+  }, [chartKey]);
 
+  // Shuffle questions when currentStageData is ready
   useEffect(() => {
     if (currentStageData && !shuffledRef.current) {
       shuffledRef.current = true;
       const shuffled = shuffleQuestionsAndOptions(currentStageData.questions);
       setShuffledQuestions(shuffled);
     }
-  }, [currentStageData, chartKey, activeParagraph]);
-
-  useEffect(() => {
-    resetStage();
-    setActiveParagraph(1);
-  }, [chartKey]);
+  }, [currentStageData]);
 
   useEffect(() => {
     // Restore saved paragraph input when entering a stage
@@ -588,13 +589,54 @@ export default function ChartChallenge() {
   useEffect(() => {
     if (stageComplete) {
       setStageCompleteMessage(STAGE_COMPLETE_MESSAGES[Math.floor(Math.random() * STAGE_COMPLETE_MESSAGES.length)]);
+      fetchExpressions();
+    } else {
+      setExpressions([]);
     }
   }, [stageComplete]);
+
+  const fetchExpressions = useCallback(async () => {
+    setExpressionsLoading(true);
+    try {
+      const res = await fetch("/api/generate-expressions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paragraphNumber: activeParagraph,
+          chartTitle: currentChart?.title || "",
+          chartQuestion: currentChart?.question || "",
+          clues: discoveredClues,
+          keywords: currentStageData?.keywords || [],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.expressions) setExpressions(data.expressions);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setExpressionsLoading(false);
+    }
+  }, [activeParagraph, currentChart, discoveredClues, currentStageData]);
+
+  const translateExpr = useCallback(async (expr: string) => {
+    if (translations[expr]) return;
+    try {
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(expr)}&langpair=en|zh&de=`);
+      const data = await res.json();
+      if (data.responseData?.translatedText) {
+        setTranslations((prev) => ({ ...prev, [expr]: data.responseData.translatedText }));
+      }
+    } catch {
+      // ignore
+    }
+  }, [translations]);
 
   const totalQuestions = shuffledQuestions.length;
   const currentQ = shuffledQuestions[currentQuestionIndex] || null;
 
-  const [burstKey, setBurstKey] = useState<string | null>(null);
+  const [burstOverlay, setBurstOverlay] = useState<{ w: number; h: number } | null>(null);
 
   const handleAnswer = (optKey: string) => {
     if (!currentQ || questionFeedback[currentQ.id]) return;
@@ -606,7 +648,6 @@ export default function ChartChallenge() {
       if (clue && !discoveredClues.includes(clue)) {
         setDiscoveredClues((prev) => [...prev, clue]);
       }
-      // Play success sound effect
       try {
         const audio = new Audio("/Audios/matched.mp3");
         audio.volume = 0.6;
@@ -614,15 +655,14 @@ export default function ChartChallenge() {
       } catch {
         // ignore
       }
-      setBurstKey(`${currentQ.id}-${optKey}`);
-      setTimeout(() => {
-        if (currentQuestionIndex < totalQuestions - 1) {
-          setCurrentQuestionIndex((prev) => prev + 1);
-        } else {
-          setStageComplete(true);
-        }
-        setBurstKey(null);
-      }, 800);
+      // Launch particle burst overlay & advance immediately
+      setBurstOverlay({ w: 140, h: 48 });
+      setTimeout(() => setBurstOverlay(null), 1200);
+      if (currentQuestionIndex < totalQuestions - 1) {
+        setCurrentQuestionIndex((prev) => prev + 1);
+      } else {
+        setStageComplete(true);
+      }
     }
   };
 
@@ -638,8 +678,16 @@ export default function ChartChallenge() {
     const evaluation = paragraphEvaluations[activeParagraph];
     if (!evaluation || evaluation.band <= 4.5) return;
     if (activeParagraph < 4) {
+      // Save current paragraph input before switching
+      setParagraphInputs((inputs) => ({ ...inputs, [activeParagraph]: paragraphInput }));
+      setCurrentQuestionIndex(0);
+      setQuestionFeedback({});
+      setDiscoveredClues([]);
+      setStageComplete(false);
+      setExpressions([]);
+      setParagraphInput("");
+      shuffledRef.current = false;
       setActiveParagraph((prev) => prev + 1);
-      resetStage();
     }
   };
 
@@ -788,38 +836,103 @@ export default function ChartChallenge() {
 
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
-            {/* Right: Clues panel */}
-            <div className="w-full lg:w-[399px] shrink-0 bg-[#F7F7F1] rounded-3xl p-4 flex flex-col gap-3 min-h-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] whitespace-nowrap" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif", color: "#64725D" }}>
-                  🧩 {stageComplete ? "线索收集完成" : "已发现线索"} {discoveredClues.length}/{totalQuestions}
-                </span>
+            {/* Left column: Clues panel + Recommended Expressions */}
+            <div className="w-full lg:w-[399px] shrink-0 flex flex-col gap-4 min-h-0">
+              {/* Clues panel */}
+              <div className="bg-[#F7F7F1] rounded-3xl p-4 flex flex-col gap-3 min-h-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] whitespace-nowrap" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif", color: "#64725D" }}>
+                    🧩 {stageComplete ? "线索收集完成" : "已发现线索"} {discoveredClues.length}/{totalQuestions}
+                  </span>
+                </div>
+
+                {discoveredClues.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {discoveredClues.map((clue, i) => (
+                      <div key={i} className="p-3 rounded-2xl h-fit flex items-start gap-2" style={{ backgroundColor: "#EAEADE" }}>
+                        <span className="text-[12px] font-black text-[#64725D] shrink-0" style={{ fontFamily: "Nunito, sans-serif" }}>
+                          {i + 1}.
+                        </span>
+                        <p className="text-[13px] font-bold text-[#2D2D2D] leading-relaxed" style={{ fontFamily: "Nunito, sans-serif" }}>
+                          {clue}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-3 flex-1">
+                    <GrayStar />
+                    <p className="text-[11px] text-center" style={{ color: "#949478", fontFamily: "PingFang SC, sans-serif" }}>
+                      选择答案<br />期待你发现线索哦～
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {discoveredClues.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  {discoveredClues.map((clue, i) => (
-                    <div key={i} className="p-3 rounded-2xl h-fit flex items-start gap-2" style={{ backgroundColor: "#EAEADE" }}>
-                      <span className="text-[12px] font-black text-[#64725D] shrink-0" style={{ fontFamily: "Nunito, sans-serif" }}>
-                        {i + 1}.
-                      </span>
-                      <p className="text-[13px] font-bold text-[#2D2D2D] leading-relaxed" style={{ fontFamily: "Nunito, sans-serif" }}>
-                        {clue}
-                      </p>
+              {/* Recommended Expressions — shown when stage is complete */}
+              {stageComplete && (
+                <div className="shrink-0 flex flex-col gap-4 p-4 rounded-3xl" style={{ backgroundColor: "#F1F2F7" }}>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[14px] whitespace-nowrap" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif", color: "#838AB1" }}>
+                      可用表达
+                    </span>
+                  </div>
+
+                  {expressionsLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="w-5 h-5 border-2 border-[#838AB1] border-t-transparent rounded-full animate-spin" />
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-3 flex-1">
-                  <GrayStar />
-                  <p className="text-[11px] text-center" style={{ color: "#949478", fontFamily: "PingFang SC, sans-serif" }}>
-                    选择答案<br />期待你发现线索哦～
-                  </p>
+                  ) : expressions.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {expressions.map((expr, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-3 rounded-2xl text-[14px] font-bold text-[#404663] leading-[22px] cursor-pointer transition-all hover:brightness-95 relative"
+                          style={{ backgroundColor: "#E0E3F0", fontFamily: "Nunito, sans-serif" }}
+                          onMouseEnter={() => {
+                            setHoveredExpr(expr);
+                            translateExpr(expr);
+                          }}
+                          onMouseLeave={() => setHoveredExpr(null)}
+                          onClick={() => {
+                            setParagraphInput((prev) => {
+                              const trimmed = prev.trimEnd();
+                              return trimmed ? `${trimmed} ${expr}` : expr;
+                            });
+                            textareaRef.current?.focus();
+                          }}
+                        >
+                          {expr}
+                          {hoveredExpr === expr && translations[expr] && (
+                            <div
+                              className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[12px] font-medium text-[#232323] whitespace-nowrap z-20 shadow-sm"
+                              style={{ backgroundColor: "#FFFCF4", fontFamily: "PingFang SC, sans-serif" }}
+                            >
+                              {translations[expr]}
+                            </div>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <button
+                    onClick={fetchExpressions}
+                    disabled={expressionsLoading}
+                    className="w-full px-4 py-2.5 rounded-full text-[14px] font-normal text-[#440044] bg-white transition-all hover:brightness-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{
+                      boxShadow: "0px 4px 0px 0px rgba(173, 173, 173, 0.25)",
+                      fontFamily: "yixinshanshanti, sans-serif",
+                    }}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${expressionsLoading ? "animate-spin" : ""}`} />
+                    换一组
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Left: Question area */}
+            {/* Right: Question area */}
             <div className="flex-1 bg-[#F7F7F1] rounded-3xl p-4 flex flex-col min-w-0 min-h-0">
 
               {/* Star + Question + Chart card wrapper */}
@@ -883,7 +996,13 @@ export default function ChartChallenge() {
 
                   {/* Answer grid or paragraph input */}
                   {!stageComplete && currentQ ? (
-                    <div className="grid grid-cols-2 gap-3 shrink-0">
+                    <div className="grid grid-cols-2 gap-3 shrink-0 relative">
+                      {/* Particle burst overlay */}
+                      {burstOverlay && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                          <ParticleBurst size={burstOverlay} />
+                        </div>
+                      )}
                       {currentQ.options.map((opt, oi) => {
                         const optKey = String.fromCharCode(65 + oi);
                         const fb = questionFeedback[currentQ.id];
@@ -896,20 +1015,15 @@ export default function ChartChallenge() {
                         if (fb && isCorrectAnswer) { bg = "#ECFDF5"; textColor = "#065F46"; border = "2px solid #065F46"; shadow = "0px 4px 0px #A7F3D0"; }
                         else if (fb) { bg = "#F5F5F0"; textColor = "#9CA3AF"; border = "2px solid #D4D4C8"; shadow = "none"; }
 
-                        const showBurst = burstKey === `${currentQ.id}-${optKey}`;
-
                         return (
                           <button
                             key={oi}
                             onClick={() => handleAnswer(optKey)}
                             disabled={!!fb}
-                            className={`flex flex-row justify-center items-center gap-3 px-4 py-3 rounded-full text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default relative ${isCorrectAnswer && fb ? "opacity-0" : ""}`}
+                            className="flex flex-row justify-center items-center gap-3 px-4 py-3 rounded-full text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default"
                             style={{ backgroundColor: bg, color: textColor, fontFamily: "Nunito, sans-serif", border, boxShadow: shadow }}
                           >
-                            {showBurst && <ParticleBurst />}
-                            <span className={isCorrectAnswer && fb ? "invisible" : ""}>
-                              {opt.replace(/^[A-D]\s+/, "")}
-                            </span>
+                            {opt.replace(/^[A-D]\s+/, "")}
                           </button>
                         );
                       })}
