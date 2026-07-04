@@ -36,10 +36,10 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
   return (
     <>
       {/* Desktop: Left Sidebar */}
-      <aside className="hidden md:flex w-fit shrink-0 flex-col border-r border-[#F4F4F4] bg-[#FFFCF4] px-4 py-6 gap-6 h-screen sticky top-0">
+      <aside className="hidden md:flex w-fit shrink-0 flex-col border-r border-black bg-[#F6E9C5] px-4 py-6 gap-6 h-screen sticky top-0">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-0">
-          <img src="/logo.svg" alt="Yasee" className="w-6 h-6" />
+          <img src="/logo2.svg" alt="Yasee" className="w-6 h-6" />
           <span className="text-2xl font-black text-[#1D2838]">Yasee</span>
         </div>
 
@@ -132,7 +132,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
       </aside>
 
       {/* Mobile: Bottom Tab Bar */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FFFCF4] border-t border-[#F4F4F4]">
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#F6E9C5] border-t border-black">
         {categories.map((cat) => {
           const isActive = active === cat.id;
           return (

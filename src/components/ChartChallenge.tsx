@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star } from "lucide-react";
+import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ParametricMapChart from "./ParametricMapChart";
 import {
@@ -235,6 +235,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
   const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: 0 },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -256,7 +257,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
         grid: { display: false },
         ticks: {
           color: "#64725D",
-          font: { family: "Nunito", size: 12 },
+          font: { family: "var(--font-nunito)", size: 12 },
         },
         border: { display: false },
       },
@@ -264,7 +265,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
         grid: { color: "#E8E8DA" },
         ticks: {
           color: "#64725D",
-          font: { family: "Nunito", size: 12 },
+          font: { family: "var(--font-nunito)", size: 12 },
         },
         border: { display: false, dash: [8, 8], dashOffset: 0 },
       },
@@ -272,31 +273,36 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
   }), []);
 
   return (
-    <div className="w-full h-full flex flex-col gap-3">
-      {(yLabel || data.series.length > 0) && (
-        <div className="shrink-0 flex items-center gap-2.5">
-          {yLabel && (
-            <span className="text-[14px] text-[#64725D] leading-[22px] tracking-wide" style={{ fontFamily: "Nunito, sans-serif", fontWeight: 400 }}>
-              {yLabel}
-            </span>
-          )}
-          <div className="flex-1" />
-          <div className="flex items-center gap-6">
-            {data.series.map((series, i) => {
-              const color = LINE_CHART_COLORS[i] || series.color;
-              return (
-                <div key={series.name} className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                  <span className="text-[14px] font-bold text-[#232323] whitespace-nowrap" style={{ fontFamily: "Nunito, sans-serif" }}>{series.name}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+    <div className="w-full h-full flex flex-col gap-4">
+      {yLabel && (
+        <span
+          className="shrink-0 text-center text-[14px] leading-[22px]"
+          style={{ fontFamily: "var(--font-nunito), sans-serif", fontWeight: 400, color: "#64725D" }}
+        >
+          {yLabel}
+        </span>
       )}
       <div className="flex-1 min-h-0">
         <Line data={chartData} options={options} />
       </div>
+      {data.series.length > 0 && (
+        <div className="shrink-0 flex items-center justify-center gap-6">
+          {data.series.map((series, i) => {
+            const color = LINE_CHART_COLORS[i] || series.color;
+            return (
+              <div key={series.name} className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                <span
+                  className="text-[14px] font-bold text-[#232323] whitespace-nowrap leading-[20px]"
+                  style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+                >
+                  {series.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -446,6 +452,79 @@ function FlowChartSVG({ data }: { data: FlowchartData }) {
   );
 }
 
+function ChartCardPreview({ chart }: { chart: ChartItem }) {
+  // Preload the chart but render at small scale — identical to renderChart but
+  // the parent scales it down, so we just use the same renderer.
+  return <ChartPreview chart={chart} />;
+}
+
+// ── Roadmap stage component ──────────────────────────────────────────
+
+type StageStatus = "done" | "in_progress" | "available" | "locked";
+
+function RoadmapStage({ label, desc, status, isFinal }: {
+  label: string; desc: string; status: StageStatus; isFinal?: boolean;
+}) {
+  const stageBg = status === "done" ? "#F7F7F1" : status === "in_progress" ? "#F7F7F1" : "#F7F7F1";
+  const labelOpacity = status === "locked" ? 0.5 : 1;
+
+  return (
+    <div
+      className="flex items-center justify-center gap-2 px-4 py-3 rounded-full"
+      style={{ backgroundColor: stageBg, fontFamily: "PingFang SC, sans-serif" }}
+    >
+      <span
+        className="text-[12px] font-black"
+        style={{ color: "#232323", opacity: labelOpacity, fontFamily: "Nunito, sans-serif" }}
+      >
+        {label}
+      </span>
+      {status === "done" && (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#09BE3C" stroke="#09BE3C" strokeWidth="2" />
+          <path d="M7 12l3 3 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+      {status === "locked" && (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="11" width="14" height="10" rx="2" fill="#B0B8B0" />
+          <path d="M8 11V7a4 4 0 018 0v4" stroke="#B0B8B0" strokeWidth="2" />
+        </svg>
+      )}
+      {status === "available" && (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#FCFF98" stroke="#232323" strokeWidth="2" />
+          <path d="M12 7v10M7 12h10" stroke="#232323" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )}
+      {status === "in_progress" && (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#FCFF98" stroke="#232323" strokeWidth="2" />
+          <path d="M12 7v10M7 12h10" stroke="#232323" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )}
+      {!isFinal && (
+        <span className="text-[12px] text-[#847C7C] ml-auto" style={{ opacity: labelOpacity }}>
+          {desc}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Internal — separate from renderChart to avoid re-render coupling with the
+// large detail chart.  Uses identical switch.
+function ChartPreview({ chart }: { chart: ChartItem }) {
+  switch (chart.type) {
+    case "line": return <LineChart data={chart.data as LineChartData} yLabel={chart.yLabel} />;
+    case "bar": return <BarChartSVG data={chart.data as BarChartData} />;
+    case "pie": return <PieChartSVG data={chart.data as PieChartData} />;
+    case "table": return <TableChart data={chart.data as TableData} />;
+    case "map": return <ParametricMapChart data={chart.data as FlowchartData} />;
+    case "flowchart": return <FlowChartSVG data={chart.data as FlowchartData} />;
+  }
+}
+
 const renderChart = (item: ChartItem) => {
   switch (item.type) {
     case "line": return <LineChart data={item.data as LineChartData} yLabel={item.yLabel} />;
@@ -457,15 +536,8 @@ const renderChart = (item: ChartItem) => {
   }
 };
 
-function GreenStar() {
-  return <img src="/logo.svg" alt="" className="w-10 h-10 shrink-0" />;
-}
-
-function GrayStar() {
-  return <img src="/logo.svg" alt="" className="w-10 h-10 shrink-0 opacity-40" />;
-}
-
 export default function ChartChallenge() {
+  const [view, setView] = useState<"list" | "detail">("list");
   const [charts, setCharts] = useState<ChartItem[] | null>(null);
   const [chartsLoading, setChartsLoading] = useState(true);
   const [activeType, setActiveType] = useState<ChartType>("line");
@@ -507,8 +579,10 @@ export default function ChartChallenge() {
   const [stageCompleteMessage, setStageCompleteMessage] = useState("");
   const [expressions, setExpressions] = useState<string[]>([]);
   const [expressionsLoading, setExpressionsLoading] = useState(false);
-  const [translations, setTranslations] = useState<Record<string, string>>({});
+  type ExprDetail = { translation: string; examples: string[] };
+  const [exprDetails, setExprDetails] = useState<Record<string, ExprDetail>>({});
   const [hoveredExpr, setHoveredExpr] = useState<string | null>(null);
+  const [showExpressionsModal, setShowExpressionsModal] = useState(false);
 
   const shuffledRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -620,18 +694,30 @@ export default function ChartChallenge() {
     }
   }, [activeParagraph, currentChart, discoveredClues, currentStageData]);
 
-  const translateExpr = useCallback(async (expr: string) => {
-    if (translations[expr]) return;
+  const fetchExprDetail = useCallback(async (expr: string) => {
+    if (exprDetails[expr]) return;
     try {
-      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(expr)}&langpair=en|zh&de=`);
-      const data = await res.json();
-      if (data.responseData?.translatedText) {
-        setTranslations((prev) => ({ ...prev, [expr]: data.responseData.translatedText }));
+      const res = await fetch("/api/expression-detail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expression: expr }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.translation) {
+          setExprDetails((prev) => ({
+            ...prev,
+            [expr]: {
+              translation: data.translation,
+              examples: Array.isArray(data.examples) ? data.examples.slice(0, 2) : [],
+            },
+          }));
+        }
       }
     } catch {
       // ignore
     }
-  }, [translations]);
+  }, [exprDetails]);
 
   const totalQuestions = shuffledQuestions.length;
   const currentQ = shuffledQuestions[currentQuestionIndex] || null;
@@ -760,11 +846,6 @@ export default function ChartChallenge() {
     }
   };
 
-  const handleChartNav = (dir: "prev" | "next") => {
-    if (dir === "prev") setActiveIndex((p) => (p - 1 + typeCharts.length) % typeCharts.length);
-    else setActiveIndex((p) => (p + 1) % typeCharts.length);
-  };
-
   if (chartsLoading || !paragraphsData) {
     return (
       <div className="w-full mx-auto p-6 flex items-center justify-center min-h-[400px]">
@@ -776,21 +857,29 @@ export default function ChartChallenge() {
     );
   }
 
-  if (!currentChart) return null;
+  if (!currentChart && view === "detail") return null;
+
+  // ── Card click handler ────────────────────────────────────────────
+  const handleCardClick = (type: ChartType, idx: number) => {
+    setActiveType(type);
+    setActiveIndex(idx);
+    setView("detail");
+  };
 
   return (
     <>
-      <div className="flex flex-col flex-1 p-6 min-h-0">
-        {/* Top bar */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3 shrink-0">
-          <div className="flex items-center gap-2.5 flex-wrap">
+      {/* ── List view ── */}
+      {view === "list" && (
+        <div className="flex flex-col flex-1 p-6 min-h-0">
+          {/* Type tabs */}
+          <div className="flex items-center gap-2.5 flex-wrap mb-6 shrink-0">
             {CHART_TYPE_ORDER.map((type) => {
               const Icon = CHART_ICONS[type];
               const isActive = activeType === type;
               return (
                 <button
                   key={type}
-                  onClick={() => { setActiveType(type); setActiveIndex(0); }}
+                  onClick={() => setActiveType(type)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition-colors ${
                     isActive
                       ? "bg-[#ECECE1] text-[#232323]"
@@ -804,297 +893,440 @@ export default function ChartChallenge() {
               );
             })}
           </div>
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => handleChartNav("next")}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-[#413F2D] text-sm hover:bg-[#f0f0e8] transition-colors"
-              style={{ fontFamily: "yixinshanshanti, sans-serif" }}
-            >
-              <RefreshCw className="w-4 h-4" />
-              更换题目
-            </button>
-            <button
-              onClick={() => setShowRoadmap(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm text-[#41402D] transition-colors hover:brightness-95"
-              style={{ backgroundColor: "#AFFF8A", fontFamily: "yixinshanshanti, sans-serif" }}
-            >
-              <img src="/map.svg" alt="闯关地图" className="w-[18px] h-[15px]" />
-              闯关地图
-            </button>
+
+          {/* Chart cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
+            {(typeCharts ?? []).map((chart, idx) => {
+              const Icon = CHART_ICONS[chart.type];
+              return (
+                <button
+                  key={chart.id}
+                  onClick={() => handleCardClick(chart.type, idx)}
+                  className="bg-white rounded-3xl text-left flex flex-col gap-3 transition-all hover:brightness-[0.97] overflow-hidden h-fit p-4"
+                >
+                  {/* Chart preview thumbnail — 16:9 */}
+                  <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", backgroundColor: "#F7F7F1" }}>
+                    <div className="w-full h-full pointer-events-none" style={{ transform: "scale(0.6)", transformOrigin: "top left", width: "167%", height: "167%" }}>
+                      <ChartCardPreview chart={chart} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-[#ECECE1] flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-[#232323]" />
+                      </div>
+                      <span className="text-[11px] font-bold text-[#949481]" style={{ fontFamily: "Arial" }}>
+                        {CHART_TYPE_LABELS[chart.type]}
+                      </span>
+                    </div>
+                    <h4 className="text-[15px] font-bold text-[#232323] leading-snug" style={{ fontFamily: "Nunito, sans-serif" }}>
+                      {chart.title}
+                    </h4>
+                    <p className="text-[12px] text-[#8B8B7E] leading-relaxed line-clamp-2" style={{ fontFamily: "Nunito, sans-serif" }}>
+                      {chart.question}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+            {typeCharts?.length === 0 && (
+              <div className="col-span-full flex items-center justify-center py-20">
+                <p className="text-[14px] text-[#949478]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                  暂无该类型的图表题目
+                </p>
+              </div>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Main content card */}
-        <div className="bg-white rounded-3xl p-4 flex flex-col flex-1 min-h-0" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.04)" }}>
-          {/* Title */}
-          <div className="flex items-baseline gap-2 mb-4 shrink-0">
-            <h2 className="text-[14px] text-[#232323] w-full" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif" }}>
+      {/* ── Detail view (challenge) ── */}
+      {view === "detail" && currentChart && (
+      <>
+      <div className="flex flex-col flex-1 min-h-0 relative overflow-hidden" style={{ backgroundColor: "#5E7D5A" }}>
+        <div className="flex flex-col gap-4 flex-1 min-h-0 p-6">
+          {/* Title bar */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setView("list")}
+              className="p-1 hover:opacity-70 transition-opacity"
+              aria-label="返回题目列表"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#F4EAC5]" />
+            </button>
+            <h2
+              className="text-[14px] text-[#F4EAC5] whitespace-nowrap"
+              style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
+            >
               第{activeParagraph}关 ：{STAGE_LABELS[activeParagraph - 1]}
             </h2>
-            <span className="text-[14px] font-bold text-[#232323]" style={{ fontFamily: "var(--font-edu-hand-bold)" }}>{STAGE_ENGLISH[activeParagraph - 1]}</span>
+            <span
+              className="text-[14px] font-bold text-[#F4EAC5] whitespace-nowrap"
+              style={{ fontFamily: "var(--font-edu-hand-bold), sans-serif" }}
+            >
+              {STAGE_ENGLISH[activeParagraph - 1]}
+            </span>
+            <div className="flex-1" />
           </div>
 
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
-            {/* Left column: Clues panel + Recommended Expressions */}
-            <div className="w-full lg:w-[399px] shrink-0 flex flex-col gap-4 min-h-0">
+            {/* Left column: Clues panel + Roadmap */}
+            <div className="w-full lg:w-[30%] flex flex-col gap-4 min-h-0 h-full overflow-y-auto">
               {/* Clues panel */}
-              <div className="bg-[#F7F7F1] rounded-3xl p-4 flex flex-col gap-3 min-h-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] whitespace-nowrap" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif", color: "#64725D" }}>
-                    🧩 {stageComplete ? "线索收集完成" : "已发现线索"} {discoveredClues.length}/{totalQuestions}
-                  </span>
-                </div>
+              <div
+                className="shrink-0 flex flex-col gap-3 p-4 border-[1.5px] border-black rounded-3xl"
+                style={{ backgroundColor: "#F6E9C5" }}
+              >
+                <span
+                  className="text-[14px]"
+                  style={{ fontFamily: "var(--font-langyuan), sans-serif", color: "#000000" }}
+                >
+                  🧩 线索区
+                </span>
 
                 {discoveredClues.length > 0 ? (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
                     {discoveredClues.map((clue, i) => (
-                      <div key={i} className="p-3 rounded-2xl h-fit flex items-start gap-2" style={{ backgroundColor: "#EAEADE" }}>
-                        <span className="text-[12px] font-black text-[#64725D] shrink-0" style={{ fontFamily: "Nunito, sans-serif" }}>
+                      <div
+                        key={i}
+                        className="px-3 py-3 rounded-2xl flex items-start gap-2 border-[1.5px] border-black"
+                        style={{ backgroundColor: "#DCCEA7" }}
+                      >
+                        <span className="text-[14px] font-bold text-[#232323] shrink-0" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
                           {i + 1}.
                         </span>
-                        <p className="text-[13px] font-bold text-[#2D2D2D] leading-relaxed" style={{ fontFamily: "Nunito, sans-serif" }}>
+                        <p className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
                           {clue}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center gap-3 flex-1">
-                    <GrayStar />
-                    <p className="text-[11px] text-center" style={{ color: "#949478", fontFamily: "PingFang SC, sans-serif" }}>
+                  <div className="flex flex-col items-center justify-center gap-3 py-6">
+                    <Star className="w-10 h-10 shrink-0" fill="#D4D4C8" stroke="#D4D4C8" strokeWidth={1.5} />
+                    <p className="text-[12px] text-center" style={{ color: "#959579", fontFamily: "PingFang SC, sans-serif" }}>
                       选择答案<br />期待你发现线索哦～
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Recommended Expressions — shown when stage is complete */}
-              {stageComplete && (
-                <div className="shrink-0 flex flex-col gap-4 p-4 rounded-3xl" style={{ backgroundColor: "#F1F2F7" }}>
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-[14px] whitespace-nowrap" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif", color: "#838AB1" }}>
-                      可用表达
-                    </span>
-                  </div>
-
-                  {expressionsLoading ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="w-5 h-5 border-2 border-[#838AB1] border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : expressions.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {expressions.map((expr, i) => (
-                        <span
-                          key={i}
-                          className="px-3 py-3 rounded-2xl text-[14px] font-bold text-[#404663] leading-[22px] cursor-pointer transition-all hover:brightness-95 relative"
-                          style={{ backgroundColor: "#E0E3F0", fontFamily: "Nunito, sans-serif" }}
-                          onMouseEnter={() => {
-                            setHoveredExpr(expr);
-                            translateExpr(expr);
-                          }}
-                          onMouseLeave={() => setHoveredExpr(null)}
-                          onClick={() => {
-                            setParagraphInput((prev) => {
-                              const trimmed = prev.trimEnd();
-                              return trimmed ? `${trimmed} ${expr}` : expr;
-                            });
-                            textareaRef.current?.focus();
-                          }}
-                        >
-                          {expr}
-                          {hoveredExpr === expr && translations[expr] && (
-                            <div
-                              className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl text-[12px] font-medium text-[#232323] whitespace-nowrap z-20 shadow-sm"
-                              style={{ backgroundColor: "#FFFCF4", fontFamily: "PingFang SC, sans-serif" }}
-                            >
-                              {translations[expr]}
-                            </div>
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  <button
-                    onClick={fetchExpressions}
-                    disabled={expressionsLoading}
-                    className="w-full px-4 py-2.5 rounded-full text-[14px] font-normal text-[#440044] bg-white transition-all hover:brightness-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{
-                      boxShadow: "0px 4px 0px 0px rgba(173, 173, 173, 0.25)",
-                      fontFamily: "yixinshanshanti, sans-serif",
-                    }}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${expressionsLoading ? "animate-spin" : ""}`} />
-                    换一组
-                  </button>
+              {/* Roadmap card */}
+              <div
+                className="flex flex-col gap-12 p-4 border-[1.5px] border-black rounded-3xl flex-1 min-h-0"
+                style={{ backgroundColor: "#F6E9C5" }}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <img src="/map.svg" alt="map" className="w-5 h-5" />
+                  <span className="text-[14px] text-[#000000]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+                    闯关地图
+                  </span>
                 </div>
-              )}
+
+                {/* Stages list */}
+                <div
+                  className="flex flex-col gap-2 p-4 border-[1.5px] border-black rounded-3xl flex-1"
+                  style={{ backgroundColor: "#DCCEA7" }}
+                >
+                  <RoadmapStage
+                    label="Intro"
+                    desc="1. 寻找图表的变化最大的地方点"
+                    status={activeParagraph === 1 ? "in_progress" : completedParagraphs.has(1) ? "done" : "locked"}
+                  />
+                  <RoadmapStage
+                    label="Overview"
+                    desc="1. 概括对比主要关键趋势特征"
+                    status={activeParagraph === 2 ? "in_progress" : completedParagraphs.has(2) ? "done" : unlockedParagraphNumbers.has(2) ? "available" : "locked"}
+                  />
+                  <RoadmapStage
+                    label="Details 1"
+                    desc="1. 编写第一个主体段"
+                    status={activeParagraph === 3 ? "in_progress" : completedParagraphs.has(3) ? "done" : unlockedParagraphNumbers.has(3) ? "available" : "locked"}
+                  />
+                  <RoadmapStage
+                    label="Details 2"
+                    desc="1. 编写第二个主体段并进行对比"
+                    status={activeParagraph === 4 ? "in_progress" : completedParagraphs.has(4) ? "done" : unlockedParagraphNumbers.has(4) ? "available" : "locked"}
+                  />
+                  <RoadmapStage
+                    label="最终评分"
+                    desc=""
+                    status={completedParagraphs.size >= 4 ? "available" : "locked"}
+                    isFinal
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Right: Question area */}
-            <div className="flex-1 bg-[#F7F7F1] rounded-3xl p-4 flex flex-col min-w-0 min-h-0">
-
-              {/* Star + Question + Chart card wrapper */}
-              <div className="flex gap-3 flex-1 min-h-0">
-                <div className="shrink-0 self-start">
-                  {currentQ ? <GreenStar /> : <GrayStar />}
+            <div
+              className="w-full lg:w-[70%] flex flex-col min-w-0 min-h-0 h-full p-4 gap-3 border-[1.5px] border-black rounded-3xl"
+              style={{ backgroundColor: "#F6E9C5" }}
+            >
+              {/* Inner question column */}
+              <div className="flex flex-col gap-3 flex-1 min-h-0 min-w-0">
+                {/* Header row: star + question bubble */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <img
+                    src="/logo2.svg"
+                    alt="Yasee"
+                    className="w-10 h-10 shrink-0"
+                  />
+                  <AnimatePresence mode="wait">
+                    {currentQ && !stageComplete ? (
+                      <motion.div
+                        key={currentQ.id}
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.25 }}
+                        className="px-4 py-3 rounded-3xl shrink-0 self-start border-[1.5px] border-black flex items-center gap-2.5"
+                        style={{ backgroundColor: "#1FCD90" }}
+                      >
+                        <p className="text-[14px] font-bold text-[#100F0E] whitespace-nowrap" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                          {currentQ.question}
+                        </p>
+                        <span className="text-[14px] font-medium text-[#100F0E] whitespace-nowrap opacity-60" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                          {currentQuestionIndex + 1}/{totalQuestions}
+                        </span>
+                      </motion.div>
+                    ) : stageComplete ? (
+                      <motion.div
+                        key="stage-complete"
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.25 }}
+                        className="px-4 py-3 rounded-3xl shrink-0 self-start border-[1.5px] border-black"
+                        style={{ backgroundColor: "#1FCD90" }}
+                      >
+                        <p className="text-[14px] font-bold text-[#100F0E] whitespace-nowrap" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                          {stageCompleteMessage}
+                        </p>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
                 </div>
 
-                <div className="flex flex-col gap-3 flex-1 min-h-0 min-w-0">
-                <AnimatePresence mode="wait">
-                  {currentQ && !stageComplete ? (
-                    <motion.div
-                      key={currentQ.id}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      transition={{ duration: 0.25 }}
-                      className="px-4 py-3 rounded-full shrink-0 self-start inline-flex items-center gap-2 border-[1.5px] border-[#262626]"
-                      style={{ backgroundColor: "#AFFF8A" }}
-                    >
-                      <p className="text-[14px] font-bold text-[#232323] whitespace-nowrap" style={{ fontFamily: "Nunito, sans-serif" }}>
-                        {currentQ.question}
-                      </p>
-                      <span className="text-[14px] font-medium whitespace-nowrap" style={{ color: "rgba(35, 35, 35, 0.6)", fontFamily: "Nunito, sans-serif" }}>
-                        {currentQuestionIndex + 1}/{totalQuestions}
-                      </span>
-                    </motion.div>
-                  ) : stageComplete ? (
-                    <motion.div
-                      key="stage-complete"
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      transition={{ duration: 0.25 }}
-                      className="px-4 py-3 rounded-full shrink-0 self-start inline-flex items-center gap-2 border-[1.5px] border-[#262626]"
-                      style={{ backgroundColor: "#AFFF8A" }}
-                    >
-                      <p className="text-[14px] font-bold text-[#232323] whitespace-nowrap" style={{ fontFamily: "Nunito, sans-serif" }}>
-                        {stageCompleteMessage}
-                      </p>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-
                 {/* Chart card */}
-                <div className="flex flex-col gap-3 flex-1 min-h-0 bg-white rounded-3xl p-4">
+                <div
+                  className="flex flex-col gap-4 flex-1 min-h-0 p-4 border-[1.5px] border-black rounded-3xl"
+                  style={{ backgroundColor: "#DCCEA7" }}
+                >
                   {/* Title + Description */}
-                  <div className="flex flex-col gap-1 shrink-0">
-                    <h3 className="text-[14px] font-medium text-[#232323] leading-[22px]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                  <div className="flex flex-col gap-1 shrink-0 text-left">
+                    <h3 className="text-[14px] font-bold text-[#232323] leading-[26px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
                       {currentChart.title}
                     </h3>
-                    <p className="text-[14px] text-[#64725D] leading-[22px]" style={{ fontFamily: "Nunito, sans-serif", fontWeight: 400 }}>
+                    <p className="text-[14px] text-[#64725D] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif", fontWeight: 400 }}>
                       {currentChart.question}
                     </p>
                   </div>
 
                   {/* Chart area */}
-                  <div className="bg-[#F7F7F1] rounded-3xl p-4 flex-1 min-h-0">
+                  <div
+                    className="flex-1 min-h-0 p-4 rounded-3xl border-[1.5px] border-black"
+                    style={{ backgroundColor: "#F6E9C5" }}
+                  >
                     {renderChart(currentChart)}
                   </div>
+                </div>
 
-                  {/* Answer grid or paragraph input */}
-                  {!stageComplete && currentQ ? (
-                    <div className="grid grid-cols-2 gap-3 shrink-0 relative">
-                      {/* Particle burst overlay */}
-                      {burstOverlay && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                          <ParticleBurst size={burstOverlay} />
-                        </div>
-                      )}
-                      {currentQ.options.map((opt, oi) => {
-                        const optKey = String.fromCharCode(65 + oi);
-                        const fb = questionFeedback[currentQ.id];
-                        const isCorrectAnswer = fb && optKey === currentQ.correctAnswer;
+                {/* Answer grid or paragraph input */}
+                {!stageComplete && currentQ ? (
+                  <div className="grid grid-cols-2 gap-3 shrink-0 relative">
+                    {/* Particle burst overlay */}
+                    {burstOverlay && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                        <ParticleBurst size={burstOverlay} />
+                      </div>
+                    )}
+                    {currentQ.options.map((opt, oi) => {
+                      const optKey = String.fromCharCode(65 + oi);
+                      const fb = questionFeedback[currentQ.id];
+                      const isCorrectAnswer = fb && optKey === currentQ.correctAnswer;
 
-                        let bg = "#F7F7F1";
-                        let textColor = "#262626";
-                        let border = "2px solid #262626";
-                        let shadow = "0px 4px 0px #ECECE1";
-                        if (fb && isCorrectAnswer) { bg = "#ECFDF5"; textColor = "#065F46"; border = "2px solid #065F46"; shadow = "0px 4px 0px #A7F3D0"; }
-                        else if (fb) { bg = "#F5F5F0"; textColor = "#9CA3AF"; border = "2px solid #D4D4C8"; shadow = "none"; }
+                      let bg = "#DCCEA7";
+                      let textColor = "#232323";
+                      let border = "1.5px solid #000000";
+                      let shadow = "none";
+                      if (fb && isCorrectAnswer) { bg = "#ECFDF5"; textColor = "#065F46"; border = "1.5px solid #065F46"; shadow = "0px 4px 0px #A7F3D0"; }
+                      else if (fb) { bg = "#F5F5F0"; textColor = "#9CA3AF"; border = "1.5px solid #D4D4C8"; shadow = "none"; }
 
-                        return (
-                          <button
-                            key={oi}
-                            onClick={() => handleAnswer(optKey)}
-                            disabled={!!fb}
-                            className="flex flex-row justify-center items-center gap-3 px-4 py-3 rounded-full text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default"
-                            style={{ backgroundColor: bg, color: textColor, fontFamily: "Nunito, sans-serif", border, boxShadow: shadow }}
-                          >
-                            {opt.replace(/^[A-D]\s+/, "")}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : stageComplete ? (
-                    <div className="flex flex-col gap-2.5 shrink-0">
-                      <div className="flex flex-col gap-2.5 p-4 rounded-3xl border-[1.5px] h-[140px] min-h-[140px]" style={{ backgroundColor: "#F7F7F1", borderColor: "#363636", boxShadow: "0px 4px 0px 0px rgba(232, 232, 220, 1)" }}>
-                        <textarea
-                          ref={textareaRef}
-                          value={paragraphInput}
-                          onChange={(e) => {
-                            setParagraphInput(e.target.value);
-                            // Update suggestion based on current word
+                      return (
+                        <button
+                          key={oi}
+                          onClick={() => handleAnswer(optKey)}
+                          disabled={!!fb}
+                          className="flex flex-row justify-center items-center gap-3 px-4 py-3 rounded-full text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default"
+                          style={{ backgroundColor: bg, color: textColor, fontFamily: "var(--font-nunito), sans-serif", border, boxShadow: shadow }}
+                        >
+                          {opt.replace(/^[A-D]\s+/, "")}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : stageComplete ? (
+                  <div className="flex flex-col gap-2.5 shrink-0">
+                    <div
+                      className="flex flex-col gap-2.5 p-4 rounded-3xl border-[1.5px] h-[140px] min-h-[140px]"
+                      style={{ backgroundColor: "#F6E9C5", borderColor: "#000000", boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 0.1)" }}
+                    >
+                      <textarea
+                        ref={textareaRef}
+                        value={paragraphInput}
+                        onChange={(e) => {
+                          setParagraphInput(e.target.value);
+                          // Update suggestion based on current word
+                          const el = textareaRef.current;
+                          if (!el || el.selectionStart === null) return;
+                          const v = e.target.value;
+                          const start = el.selectionStart;
+                          const textBeforeCursor = v.slice(0, start);
+                          const wordStart = textBeforeCursor.search(/\S+$/);
+                          const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
+                          const autocompleteContext = {
+                            chartTitle: currentChart?.title,
+                            chartQuestion: currentChart?.question,
+                            chartType: currentChart?.type,
+                            keywords: currentStageData?.keywords,
+                            clues: discoveredClues,
+                            paragraphNumber: activeParagraph,
+                            textBeforeCursor: textBeforeCursor,
+                          };
+                          setSuggestion(currentWord ? findAutocomplete(currentWord, autocompleteContext) : null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Tab" && suggestion) {
+                            e.preventDefault();
                             const el = textareaRef.current;
                             if (!el || el.selectionStart === null) return;
-                            const v = e.target.value;
                             const start = el.selectionStart;
-                            const textBeforeCursor = v.slice(0, start);
+                            // Recompute current word at cursor
+                            const textBeforeCursor = paragraphInput.slice(0, start);
                             const wordStart = textBeforeCursor.search(/\S+$/);
                             const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
-                            const autocompleteContext = {
-                              chartTitle: currentChart?.title,
-                              chartQuestion: currentChart?.question,
-                              chartType: currentChart?.type,
-                              keywords: currentStageData?.keywords,
-                              clues: discoveredClues,
-                              paragraphNumber: activeParagraph,
-                              textBeforeCursor: textBeforeCursor,
-                            };
-                            setSuggestion(currentWord ? findAutocomplete(currentWord, autocompleteContext) : null);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Tab" && suggestion) {
-                              e.preventDefault();
-                              const el = textareaRef.current;
-                              if (!el || el.selectionStart === null) return;
-                              const start = el.selectionStart;
-                              // Recompute current word at cursor
-                              const textBeforeCursor = paragraphInput.slice(0, start);
-                              const wordStart = textBeforeCursor.search(/\S+$/);
-                              const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
-                              const tail = suggestion.slice(currentWord.length);
-                              const newText =
-                                paragraphInput.slice(0, start) + tail + paragraphInput.slice(start);
-                              setParagraphInput(newText);
-                              setSuggestion(null);
-                              setTimeout(() => {
-                                const newCursor = start + tail.length;
-                                el.setSelectionRange(newCursor, newCursor);
-                              }, 0);
-                            }
-                          }}
-                          placeholder="The line graph illustrates..."
-                          className="w-full flex-1 min-h-0 bg-transparent resize-none outline-none text-[14px] font-bold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
-                          style={{ fontFamily: "Nunito, sans-serif" }}
-                        />
-                        {/* Suggestion preview */}
-                        {suggestion && (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ECECD9] w-fit">
-                            <span
-                              className="text-[12px] font-bold text-[#64725D]"
-                              style={{ fontFamily: "Nunito, sans-serif" }}
-                            >
-                              Tab 补全: <span className="text-[#232323]">{suggestion}</span>
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-end justify-between gap-3">
-                          <span className="text-[12px] font-medium leading-[22px]" style={{ color: "#A7A794", fontFamily: "PingFang SC, sans-serif" }}>
-                            字词数: <span style={{ color: "#2C2C2C" }}>{paragraphInput.trim().split(/\s+/).filter(Boolean).length}</span>
+                            const tail = suggestion.slice(currentWord.length);
+                            const newText =
+                              paragraphInput.slice(0, start) + tail + paragraphInput.slice(start);
+                            setParagraphInput(newText);
+                            setSuggestion(null);
+                            setTimeout(() => {
+                              const newCursor = start + tail.length;
+                              el.setSelectionRange(newCursor, newCursor);
+                            }, 0);
+                          }
+                        }}
+                        placeholder="The line graph illustrates..."
+                        className="w-full flex-1 min-h-0 bg-transparent resize-none outline-none text-[14px] font-bold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
+                        style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+                      />
+                      {/* Suggestion preview */}
+                      {suggestion && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ECECD9] w-fit">
+                          <span
+                            className="text-[12px] font-bold text-[#64725D]"
+                            style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+                          >
+                            Tab 补全: <span className="text-[#232323]">{suggestion}</span>
                           </span>
+                        </div>
+                      )}
+                      <div className="flex items-end justify-between gap-3">
+                        <span className="text-[12px] font-medium leading-[22px]" style={{ color: "#A7A794", fontFamily: "PingFang SC, sans-serif" }}>
+                          字词数: <span style={{ color: "#2C2C2C" }}>{paragraphInput.trim().split(/\s+/).filter(Boolean).length}</span>
+                        </span>
+                        <div className="flex items-center gap-2.5 relative">
+                          {stageComplete && (
+                            <button
+                              onClick={() => setShowExpressionsModal(!showExpressionsModal)}
+                              className="px-4 py-2.5 rounded-full text-[14px] text-[#2C2C2C] transition-all hover:brightness-95 flex items-center justify-center gap-2 border-[1.5px] border-[#000000]"
+                              style={{ backgroundColor: "#FCFF98", fontFamily: "var(--font-langyuan), sans-serif" }}
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                              推荐表达
+                            </button>
+                          )}
+
+                          {/* Dropdown overlay */}
+                          {showExpressionsModal && (
+                            <div
+                              className="absolute bottom-full right-0 mb-2 z-50 bg-[#F1F2F7] rounded-3xl p-4 shadow-2xl flex flex-col gap-3"
+                              style={{ minWidth: 280, maxWidth: 420 }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-[14px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                                  推荐表达
+                                </span>
+                                <button
+                                  onClick={() => setShowExpressionsModal(false)}
+                                  className="p-1 rounded-full hover:bg-black/5 transition-colors"
+                                >
+                                  <X className="w-4 h-4 text-[#080808]" />
+                                </button>
+                              </div>
+
+                              {expressionsLoading ? (
+                                <div className="flex items-center justify-center py-4">
+                                  <div className="w-5 h-5 border-2 border-[#838AB1] border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              ) : expressions.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {expressions.map((expr, i) => (
+                                    <span
+                                      key={i}
+                                      className="px-3 py-2.5 rounded-2xl text-[13px] font-bold text-[#404663] leading-[20px] cursor-pointer transition-all hover:brightness-95 relative"
+                                      style={{ backgroundColor: "#E0E3F0", fontFamily: "var(--font-nunito), sans-serif" }}
+                                      onMouseEnter={() => {
+                                        setHoveredExpr(expr);
+                                        fetchExprDetail(expr);
+                                      }}
+                                      onMouseLeave={() => setHoveredExpr(null)}
+                                      onClick={() => {
+                                        setParagraphInput((prev) => {
+                                          const trimmed = prev.trimEnd();
+                                          return trimmed ? `${trimmed} ${expr}` : expr;
+                                        });
+                                        textareaRef.current?.focus();
+                                      }}
+                                    >
+                                      {expr}
+                                      {hoveredExpr === expr && exprDetails[expr] && (
+                                        <div
+                                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-3 py-2 rounded-xl text-[11px] font-medium text-[#232323] z-20 shadow-sm w-56"
+                                          style={{ backgroundColor: "#FFFCF4", fontFamily: "PingFang SC, sans-serif" }}
+                                        >
+                                          <div className="font-bold mb-0.5">{exprDetails[expr].translation}</div>
+                                          {exprDetails[expr].examples.length > 0 && (
+                                            <ul className="list-disc pl-3 space-y-0.5 text-[10px] text-[#444444]">
+                                              {exprDetails[expr].examples.map((ex, idx) => (
+                                                <li key={idx}>{ex}</li>
+                                              ))}
+                                            </ul>
+                                          )}
+                                        </div>
+                                      )}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
+
+                              <button
+                                onClick={fetchExpressions}
+                                disabled={expressionsLoading}
+                                className="w-full px-4 py-2.5 rounded-full text-[13px] font-normal text-[#440044] bg-white transition-all hover:brightness-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                                style={{
+                                  boxShadow: "0px 4px 0px 0px rgba(173, 173, 173, 0.25)",
+                                  fontFamily: "var(--font-langyuan), sans-serif",
+                                }}
+                              >
+                                <RefreshCw className={`w-4 h-4 ${expressionsLoading ? "animate-spin" : ""}`} />
+                                换一组
+                              </button>
+                            </div>
+                          )}
+
                           <button
                             onClick={handleEvaluateParagraph}
                             disabled={evaluating || !paragraphInput.trim()}
@@ -1109,24 +1341,23 @@ export default function ChartChallenge() {
                           </button>
                         </div>
                       </div>
-
                     </div>
-                  ) : null}
 
-                  {/* Continue button */}
-                </div>
+                  </div>
+                ) : null}
+
+                {/* Continue button */}
                 {currentQ && questionFeedback[currentQ.id] === "incorrect" && !stageComplete && (
                   <div className="flex justify-center">
                     <button
                       onClick={handleNextQuestion}
-                      className="px-6 py-2.5 rounded-full text-sm font-bold text-[#232323] transition-colors"
-                      style={{ backgroundColor: "#AFFF8A", fontFamily: "Nunito, sans-serif" }}
+                      className="px-6 py-2.5 rounded-full text-[14px] font-bold text-[#232323] transition-colors"
+                      style={{ backgroundColor: "#AFFF8A", fontFamily: "var(--font-nunito), sans-serif" }}
                     >
                       {currentQuestionIndex < totalQuestions - 1 ? "下一题 →" : "完成本关 ✓"}
                     </button>
                   </div>
                 )}
-              </div>
               </div>
             </div>
           </div>
@@ -1295,6 +1526,7 @@ export default function ChartChallenge() {
           )}
         </AnimatePresence>
 
+      {/* ---- 整篇文章评分 弹窗 ---- */}
       <AnimatePresence>
           {showEssayResult && essayEvaluation && (
             <>
@@ -1591,6 +1823,8 @@ export default function ChartChallenge() {
             </>
           )}
         </AnimatePresence>
+      </>
+      )}
     </>
   );
 }

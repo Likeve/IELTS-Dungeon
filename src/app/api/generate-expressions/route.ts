@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     const goal = PARAGRAPH_GOALS[paragraphNumber] || "IELTS Task 1 paragraph";
 
     if (AI_API_URL && AI_API_KEY) {
-      const prompt = `You are an IELTS Band 9 writing coach. Based on the chart below, generate exactly 10 useful words/phrases that would be appropriate for writing the "${goal}" paragraph of a Task 1 report.
+      const prompt = `You are an IELTS Band 9 writing coach. Based on the chart below, generate exactly 5 useful words/phrases that would be appropriate for writing the "${goal}" paragraph of a Task 1 report.
 
 Chart: "${chartTitle}"
 Task question: "${chartQuestion}"
@@ -44,7 +44,7 @@ Collected clues: ${(clues || []).join(", ")}
 
 Respond with ONLY a JSON object (no markdown, no extra text):
 {
-  "expressions": string[] (exactly 10 English words or short phrases useful for this paragraph, mix of vocabulary, connectors, and expressions)
+  "expressions": string[] (exactly 5 English words or short phrases useful for this paragraph, mix of vocabulary, connectors, and expressions)
 }
 
 The expressions should be:
@@ -85,7 +85,7 @@ The expressions should be:
 
     // Local fallback — generic IELTS expressions
     const fallback = getFallbackExpressions(paragraphNumber, keywords, clues);
-    return NextResponse.json({ expressions: fallback });
+    return NextResponse.json({ expressions: fallback.slice(0, 5) });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -98,7 +98,7 @@ function parseAIResponse(text: string): { expressions: string[] } | null {
     if (!jsonMatch) return null;
     const json = JSON.parse(jsonMatch[0]);
     if (Array.isArray(json.expressions) && json.expressions.length > 0) {
-      return { expressions: json.expressions.slice(0, 10) };
+      return { expressions: json.expressions.slice(0, 5) };
     }
     return null;
   } catch {
