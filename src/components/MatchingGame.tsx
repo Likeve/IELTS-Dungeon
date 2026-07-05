@@ -224,7 +224,7 @@ const highlightWordInText = (text: string, word: string): React.ReactNode => {
   });
 };
 
-export default function MatchingGame({ initialGameMode, onInsideChange }: { initialGameMode?: "words" | "phrases" | "sentences" | "dictation" | "chart"; onInsideChange?: (inside: boolean) => void }) {
+export default function MatchingGame({ initialGameMode, onInsideChange, chartView, onChartViewChange }: { initialGameMode?: "words" | "phrases" | "sentences" | "dictation" | "chart"; onInsideChange?: (inside: boolean) => void; chartView?: "list" | "detail"; onChartViewChange?: (view: "list" | "detail") => void }) {
   const [leftItems, setLeftItems] = useState<GameItem[]>([]);
   const [rightItems, setRightItems] = useState<GameItem[]>([]);
   
@@ -734,7 +734,7 @@ export default function MatchingGame({ initialGameMode, onInsideChange }: { init
       ) : gameMode === "dictation" ? (
         <DictationGame />
       ) : (
-        <ChartChallenge />
+        <ChartChallenge view={chartView} onViewChange={onChartViewChange} />
       )}
 
       {/* Stage Complete Modal */}

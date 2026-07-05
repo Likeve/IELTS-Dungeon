@@ -458,6 +458,45 @@ function ChartCardPreview({ chart }: { chart: ChartItem }) {
   return <ChartPreview chart={chart} />;
 }
 
+// ── Inline ghost suggestion component ───────────────────────────────
+
+function GhostSuggestion({
+  textareaRef,
+  input,
+  suggestion,
+}: {
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  input: string;
+  suggestion: string;
+}) {
+  const [ghost, setGhost] = useState<string>("");
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el || el.selectionStart === null) {
+      setGhost("");
+      return;
+    }
+    const start = el.selectionStart;
+    const textBeforeCursor = input.slice(0, start);
+    const wordStart = textBeforeCursor.search(/\S+$/);
+    const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
+    const tail = suggestion.slice(currentWord.length);
+    setGhost(textBeforeCursor + tail + input.slice(start));
+  }, [textareaRef, input, suggestion]);
+
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none text-[14px] font-bold leading-[22px] whitespace-pre-wrap break-words overflow-hidden"
+      style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+      aria-hidden="true"
+    >
+      <span className="text-[#000000]">{ghost.slice(0, input.length)}</span>
+      <span className="text-[#A7A794]" style={{ opacity: 0.6 }}>{ghost.slice(input.length)}</span>
+    </div>
+  );
+}
+
 // ── Roadmap stage component ──────────────────────────────────────────
 
 type StageStatus = "done" | "in_progress" | "available" | "locked";
@@ -470,7 +509,7 @@ function RoadmapStage({ label, desc, status, isFinal }: {
 
   return (
     <div
-      className="flex items-center justify-center gap-2 px-4 py-3 rounded-full"
+      className="flex items-center gap-2 px-4 py-3 rounded-full"
       style={{ backgroundColor: stageBg, fontFamily: "PingFang SC, sans-serif" }}
     >
       <span
@@ -536,8 +575,14 @@ const renderChart = (item: ChartItem) => {
   }
 };
 
-export default function ChartChallenge() {
-  const [view, setView] = useState<"list" | "detail">("list");
+export default function ChartChallenge({ view: externalView, onViewChange }: { view?: "list" | "detail"; onViewChange?: (view: "list" | "detail") => void }) {
+  const [internalView, setInternalView] = useState<"list" | "detail">("list");
+  const isControlled = externalView !== undefined;
+  const view = isControlled ? externalView : internalView;
+  const setView = useCallback((next: "list" | "detail") => {
+    if (!isControlled) setInternalView(next);
+    onViewChange?.(next);
+  }, [isControlled, onViewChange]);
   const [charts, setCharts] = useState<ChartItem[] | null>(null);
   const [chartsLoading, setChartsLoading] = useState(true);
   const [activeType, setActiveType] = useState<ChartType>("line");
@@ -899,10 +944,10 @@ export default function ChartChallenge() {
             {(typeCharts ?? []).map((chart, idx) => {
               const Icon = CHART_ICONS[chart.type];
               return (
-                <button
+                <div
                   key={chart.id}
                   onClick={() => handleCardClick(chart.type, idx)}
-                  className="bg-white rounded-3xl text-left flex flex-col gap-3 transition-all hover:brightness-[0.97] overflow-hidden h-fit p-4"
+                  className="bg-white rounded-3xl text-left flex flex-col gap-3 transition-all hover:brightness-[0.97] overflow-hidden h-fit p-4 cursor-pointer"
                 >
                   {/* Chart preview thumbnail — 16:9 */}
                   <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", backgroundColor: "#F7F7F1" }}>
@@ -926,7 +971,7 @@ export default function ChartChallenge() {
                       {chart.question}
                     </p>
                   </div>
-                </button>
+                </div>
               );
             })}
             {typeCharts?.length === 0 && (
@@ -945,30 +990,6 @@ export default function ChartChallenge() {
       <>
       <div className="flex flex-col flex-1 min-h-0 relative overflow-hidden" style={{ backgroundColor: "#5E7D5A" }}>
         <div className="flex flex-col gap-4 flex-1 min-h-0 p-6">
-          {/* Title bar */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setView("list")}
-              className="p-1 hover:opacity-70 transition-opacity"
-              aria-label="返回题目列表"
-            >
-              <ArrowLeft className="w-5 h-5 text-[#F4EAC5]" />
-            </button>
-            <h2
-              className="text-[14px] text-[#F4EAC5] whitespace-nowrap"
-              style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
-            >
-              第{activeParagraph}关 ：{STAGE_LABELS[activeParagraph - 1]}
-            </h2>
-            <span
-              className="text-[14px] font-bold text-[#F4EAC5] whitespace-nowrap"
-              style={{ fontFamily: "var(--font-edu-hand-bold), sans-serif" }}
-            >
-              {STAGE_ENGLISH[activeParagraph - 1]}
-            </span>
-            <div className="flex-1" />
-          </div>
-
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
             {/* Left column: Clues panel + Roadmap */}
@@ -1014,10 +1035,10 @@ export default function ChartChallenge() {
 
               {/* Roadmap card */}
               <div
-                className="flex flex-col gap-12 p-4 border-[1.5px] border-black rounded-3xl flex-1 min-h-0"
+                className="flex flex-col gap-3 p-4 border-[1.5px] border-black rounded-3xl flex-1 min-h-0"
                 style={{ backgroundColor: "#F6E9C5" }}
               >
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-start gap-2">
                   <img src="/map.svg" alt="map" className="w-5 h-5" />
                   <span className="text-[14px] text-[#000000]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                     闯关地图
@@ -1170,69 +1191,68 @@ export default function ChartChallenge() {
                 ) : stageComplete ? (
                   <div className="flex flex-col gap-2.5 shrink-0">
                     <div
-                      className="flex flex-col gap-2.5 p-4 rounded-3xl border-[1.5px] h-[140px] min-h-[140px]"
+                      className="flex flex-col gap-2.5 p-4 rounded-3xl border-[1.5px] h-[140px] min-h-[140px] relative"
                       style={{ backgroundColor: "#F6E9C5", borderColor: "#000000", boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 0.1)" }}
                     >
-                      <textarea
-                        ref={textareaRef}
-                        value={paragraphInput}
-                        onChange={(e) => {
-                          setParagraphInput(e.target.value);
-                          // Update suggestion based on current word
-                          const el = textareaRef.current;
-                          if (!el || el.selectionStart === null) return;
-                          const v = e.target.value;
-                          const start = el.selectionStart;
-                          const textBeforeCursor = v.slice(0, start);
-                          const wordStart = textBeforeCursor.search(/\S+$/);
-                          const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
-                          const autocompleteContext = {
-                            chartTitle: currentChart?.title,
-                            chartQuestion: currentChart?.question,
-                            chartType: currentChart?.type,
-                            keywords: currentStageData?.keywords,
-                            clues: discoveredClues,
-                            paragraphNumber: activeParagraph,
-                            textBeforeCursor: textBeforeCursor,
-                          };
-                          setSuggestion(currentWord ? findAutocomplete(currentWord, autocompleteContext) : null);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Tab" && suggestion) {
-                            e.preventDefault();
+                      <div className="relative flex-1 min-h-0">
+                        <textarea
+                          ref={textareaRef}
+                          value={paragraphInput}
+                          onChange={(e) => {
+                            setParagraphInput(e.target.value);
+                            // Update suggestion based on current word
                             const el = textareaRef.current;
                             if (!el || el.selectionStart === null) return;
+                            const v = e.target.value;
                             const start = el.selectionStart;
-                            // Recompute current word at cursor
-                            const textBeforeCursor = paragraphInput.slice(0, start);
+                            const textBeforeCursor = v.slice(0, start);
                             const wordStart = textBeforeCursor.search(/\S+$/);
                             const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
-                            const tail = suggestion.slice(currentWord.length);
-                            const newText =
-                              paragraphInput.slice(0, start) + tail + paragraphInput.slice(start);
-                            setParagraphInput(newText);
-                            setSuggestion(null);
-                            setTimeout(() => {
-                              const newCursor = start + tail.length;
-                              el.setSelectionRange(newCursor, newCursor);
-                            }, 0);
-                          }
-                        }}
-                        placeholder="The line graph illustrates..."
-                        className="w-full flex-1 min-h-0 bg-transparent resize-none outline-none text-[14px] font-bold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
-                        style={{ fontFamily: "var(--font-nunito), sans-serif" }}
-                      />
-                      {/* Suggestion preview */}
-                      {suggestion && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ECECD9] w-fit">
-                          <span
-                            className="text-[12px] font-bold text-[#64725D]"
-                            style={{ fontFamily: "var(--font-nunito), sans-serif" }}
-                          >
-                            Tab 补全: <span className="text-[#232323]">{suggestion}</span>
-                          </span>
-                        </div>
-                      )}
+                            const autocompleteContext = {
+                              chartTitle: currentChart?.title,
+                              chartQuestion: currentChart?.question,
+                              chartType: currentChart?.type,
+                              keywords: currentStageData?.keywords,
+                              clues: discoveredClues,
+                              paragraphNumber: activeParagraph,
+                              textBeforeCursor: textBeforeCursor,
+                            };
+                            setSuggestion(currentWord ? findAutocomplete(currentWord, autocompleteContext) : null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Tab" && suggestion) {
+                              e.preventDefault();
+                              const el = textareaRef.current;
+                              if (!el || el.selectionStart === null) return;
+                              const start = el.selectionStart;
+                              // Recompute current word at cursor
+                              const textBeforeCursor = paragraphInput.slice(0, start);
+                              const wordStart = textBeforeCursor.search(/\S+$/);
+                              const currentWord = wordStart === -1 ? "" : textBeforeCursor.slice(wordStart);
+                              const tail = suggestion.slice(currentWord.length);
+                              const newText =
+                                paragraphInput.slice(0, start) + tail + paragraphInput.slice(start);
+                              setParagraphInput(newText);
+                              setSuggestion(null);
+                              setTimeout(() => {
+                                const newCursor = start + tail.length;
+                                el.setSelectionRange(newCursor, newCursor);
+                              }, 0);
+                            }
+                          }}
+                          placeholder="The line graph illustrates..."
+                          className="absolute inset-0 w-full h-full bg-transparent resize-none outline-none text-[14px] font-bold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
+                          style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+                        />
+                        {/* Inline ghost suggestion */}
+                        {suggestion && (
+                          <GhostSuggestion
+                            textareaRef={textareaRef}
+                            input={paragraphInput}
+                            suggestion={suggestion}
+                          />
+                        )}
+                      </div>
                       <div className="flex items-end justify-between gap-3">
                         <span className="text-[12px] font-medium leading-[22px]" style={{ color: "#A7A794", fontFamily: "PingFang SC, sans-serif" }}>
                           字词数: <span style={{ color: "#2C2C2C" }}>{paragraphInput.trim().split(/\s+/).filter(Boolean).length}</span>
