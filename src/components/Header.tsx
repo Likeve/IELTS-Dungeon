@@ -5,7 +5,7 @@ import { Flag, User, ArrowLeft } from "lucide-react";
 
 export default function Header({ chartDetail, onBack }: { chartDetail?: { stage: number } | null; onBack?: () => void }) {
   return (
-    <header className="h-[65px] shrink-0 flex items-center gap-3 px-4 bg-[#FAFFE9] border-b border-black sticky top-0 z-30">
+    <header className="h-[65px] shrink-0 flex items-center gap-3 px-4 bg-[#FAFFE9] sticky top-0 z-30">
       {chartDetail ? (
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <button onClick={onBack} className="p-1 hover:opacity-70 transition-opacity" aria-label="返回题目列表">
@@ -28,16 +28,16 @@ export default function Header({ chartDetail, onBack }: { chartDetail?: { stage:
         <div className="flex-1" />
       )}
       <div className="flex items-center gap-2 shrink-0">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border-[1.5px] border-black bg-[#DCCEA7]">
+        <div className="flex items-center gap-1 px-3 py-[9px] rounded-full border-[1.5px] border-black bg-[#F2FDC9]" style={{ boxShadow: "0px 2px 0px #1C252E" }}>
           <span className="text-sm font-black text-[#080808]">等级：Lv4</span>
         </div>
 
-        <button className="flex items-center gap-2 px-3 py-2 rounded-xl border-[1.5px] border-black bg-[#DCCEA7] hover:brightness-[0.97] transition-all">
+        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full border-[1.5px] border-black bg-[#F2FDC9] transition-all hover:brightness-[0.97]" style={{ boxShadow: "0px 2px 0px #1C252E" }}>
           <Flag className="w-4 h-4 text-[#080808]" />
           <span className="text-sm font-black text-[#080808]">任务中心</span>
         </button>
 
-        <button className="flex items-center gap-2 px-3 py-2 rounded-xl border-[1.5px] border-black bg-[#DCCEA7] hover:brightness-[0.97] transition-all">
+        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full border-[1.5px] border-black bg-[#F2FDC9] transition-all hover:brightness-[0.97]" style={{ boxShadow: "0px 2px 0px #1C252E" }}>
           <User className="w-4 h-4 text-[#080808]" />
           <span className="text-sm font-black text-[#080808]">Kv</span>
         </button>

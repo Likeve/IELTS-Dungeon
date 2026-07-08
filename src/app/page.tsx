@@ -33,7 +33,7 @@ export default function Home() {
             onChartViewChange={setChartView}
           />
         ) : (
-          <div className="flex flex-1 items-center justify-center bg-[#F7F6F0]">
+          <div className="flex flex-1 items-center justify-center bg-[#F0F6DB]">
             <p className="text-[#808771] text-lg font-medium">
               即将推出
             </p>

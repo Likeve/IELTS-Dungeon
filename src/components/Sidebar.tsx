@@ -44,7 +44,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
   return (
     <>
       {/* Desktop: Left Sidebar */}
-      <aside className="hidden md:flex w-fit shrink-0 flex-col border-r border-black bg-[#FAFFE9] px-4 py-6 gap-6 h-screen sticky top-0">
+      <aside className="hidden md:flex w-fit shrink-0 flex-col bg-[#FAFFE9] px-4 py-6 gap-6 h-screen sticky top-0">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-0">
           <img src="/logo2.svg" alt="Yasee" className="w-6 h-6" />
@@ -55,22 +55,26 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
         <div className="flex flex-col gap-1 flex-1 items-start">
           {categories.map((cat) => {
             const isActive = active === cat.id;
-            const isWriting = cat.id === "writing";
-            const isReading = cat.id === "reading";
-            const isListening = cat.id === "listening";
+            const isExpandable = cat.id === "listening" || cat.id === "reading" || cat.id === "writing";
+            const isExpanded =
+              cat.id === "listening" ? listeningExpanded :
+              cat.id === "reading" ? readingExpanded :
+              writingExpanded;
+            const setExpanded =
+              cat.id === "listening" ? setListeningExpanded :
+              cat.id === "reading" ? setReadingExpanded :
+              setWritingExpanded;
+            const subItems =
+              cat.id === "listening" ? listeningSubItems :
+              cat.id === "reading" ? readingSubItems :
+              writingSubItems;
 
             return (
               <div key={cat.id}>
                 <motion.button
                   onClick={() => {
-                    if (isWriting) {
-                      setWritingExpanded(!writingExpanded);
-                    }
-                    if (isReading) {
-                      setReadingExpanded(!readingExpanded);
-                    }
-                    if (isListening) {
-                      setListeningExpanded(!listeningExpanded);
+                    if (isExpandable) {
+                      setExpanded(!isExpanded);
                     }
                     onSelect(cat.id);
                   }}
@@ -84,25 +88,9 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                 >
                   <cat.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-[#232323]" : "text-[#808771]"}`} />
                   <span className="whitespace-nowrap text-left">{cat.label}</span>
-                  {isWriting && (
+                  {isExpandable && (
                     <motion.div
-                      animate={{ rotate: writingExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronDown className="w-4 h-4 shrink-0" />
-                    </motion.div>
-                  )}
-                  {isReading && (
-                    <motion.div
-                      animate={{ rotate: readingExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronDown className="w-4 h-4 shrink-0" />
-                    </motion.div>
-                  )}
-                  {isListening && (
-                    <motion.div
-                      animate={{ rotate: listeningExpanded ? 180 : 0 }}
+                      animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
                     >
                       <ChevronDown className="w-4 h-4 shrink-0" />
@@ -110,10 +98,10 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                   )}
                 </motion.button>
 
-                {/* Listening Sub-menu */}
-                {isListening && (
+                {/* Sub-menu */}
+                {isExpandable && (
                   <AnimatePresence initial={false}>
-                    {listeningExpanded && (
+                    {isExpanded && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -122,85 +110,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                         className="overflow-hidden"
                       >
                         <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
-                          {listeningSubItems.map((item) => {
-                            const isSubActive = activeGameMode === item.mode;
-                            return (
-                              <motion.button
-                                key={item.mode}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onGameModeSelect(item.mode);
-                                }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.97 }}
-                                className={`w-fit text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
-                                  isSubActive
-                                    ? "bg-[#ECECD9] text-[#080808] font-black"
-                                    : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
-                                }`}
-                              >
-                                {item.label}
-                              </motion.button>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                )}
-
-                {/* Writing Sub-menu */}
-                {isWriting && (
-                  <AnimatePresence initial={false}>
-                    {writingExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
-                          {writingSubItems.map((item) => {
-                            const isSubActive = activeGameMode === item.mode;
-                            return (
-                              <motion.button
-                                key={item.mode}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onGameModeSelect(item.mode);
-                                }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.97 }}
-                                className={`w-fit text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
-                                  isSubActive
-                                    ? "bg-[#ECECD9] text-[#080808] font-black"
-                                    : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
-                                }`}
-                              >
-                                {item.label}
-                              </motion.button>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                )}
-
-                {/* Reading Sub-menu */}
-                {isReading && (
-                  <AnimatePresence initial={false}>
-                    {readingExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
-                          {readingSubItems.map((item) => {
+                          {subItems.map((item) => {
                             const isSubActive = activeGameMode === item.mode;
                             return (
                               <motion.button

@@ -988,7 +988,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
       {/* ── Detail view (challenge) ── */}
       {view === "detail" && currentChart && (
       <>
-      <div className="flex flex-col flex-1 min-h-0 relative overflow-hidden" style={{ backgroundColor: "#5E7D5A" }}>
+      <div className="flex flex-col flex-1 min-h-0 relative overflow-hidden" >
         <div className="flex flex-col gap-4 flex-1 min-h-0 p-6">
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
@@ -997,7 +997,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
               {/* Clues panel */}
               <div
                 className="shrink-0 flex flex-col gap-3 p-4 border-[1.5px] border-black rounded-3xl"
-                style={{ backgroundColor: "#F6E9C5" }}
+                style={{ backgroundColor: "#FAFFE9" }}
               >
                 <span
                   className="text-[14px]"
@@ -1006,37 +1006,48 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   🧩 线索区
                 </span>
 
-                {discoveredClues.length > 0 ? (
-                  <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
-                    {discoveredClues.map((clue, i) => (
+                {/* 3 clue slots that fill progressively */}
+                <div className="flex flex-col gap-2">
+                  {[0, 1, 2].map((idx) => {
+                    const clue = discoveredClues[idx];
+                    if (clue) {
+                      return (
+                        <div
+                          key={idx}
+                          className="px-3 py-3 rounded-2xl flex items-start gap-2 border-[1.5px] border-black"
+                          style={{ backgroundColor: "#F0F6DB" }}
+                        >
+                          <span className="text-[14px] font-bold text-[#232323] shrink-0" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                            {idx + 1}.
+                          </span>
+                          <p className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                            {clue}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
                       <div
-                        key={i}
-                        className="px-3 py-3 rounded-2xl flex items-start gap-2 border-[1.5px] border-black"
-                        style={{ backgroundColor: "#DCCEA7" }}
+                        key={idx}
+                        className="flex items-center px-3 py-[12px] gap-2 rounded-2xl border-[1.5px] border-dashed"
+                        style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC", height: "46px" }}
                       >
-                        <span className="text-[14px] font-bold text-[#232323] shrink-0" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                          {i + 1}.
+                        <span
+                          className="text-[14px] font-bold shrink-0"
+                          style={{ color: "#C9CCBC", fontFamily: "var(--font-nunito), sans-serif" }}
+                        >
+                          待发现线索{idx + 1}
                         </span>
-                        <p className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                          {clue}
-                        </p>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center gap-3 py-6">
-                    <Star className="w-10 h-10 shrink-0" fill="#D4D4C8" stroke="#D4D4C8" strokeWidth={1.5} />
-                    <p className="text-[12px] text-center" style={{ color: "#959579", fontFamily: "PingFang SC, sans-serif" }}>
-                      选择答案<br />期待你发现线索哦～
-                    </p>
-                  </div>
-                )}
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Roadmap card */}
               <div
                 className="flex flex-col gap-3 p-4 border-[1.5px] border-black rounded-3xl flex-1 min-h-0"
-                style={{ backgroundColor: "#F6E9C5" }}
+                style={{ backgroundColor: "#FAFFE9" }}
               >
                 <div className="flex items-center justify-start gap-2">
                   <img src="/map.svg" alt="map" className="w-5 h-5" />
@@ -1048,7 +1059,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                 {/* Stages list */}
                 <div
                   className="flex flex-col gap-2 p-4 border-[1.5px] border-black rounded-3xl flex-1"
-                  style={{ backgroundColor: "#DCCEA7" }}
+                  style={{ backgroundColor: "#F0F6DB" }}
                 >
                   <RoadmapStage
                     label="Intro"
@@ -1083,7 +1094,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
             {/* Right: Question area */}
             <div
               className="w-full lg:w-[70%] flex flex-col min-w-0 min-h-0 h-full p-4 gap-3 border-[1.5px] border-black rounded-3xl"
-              style={{ backgroundColor: "#F6E9C5" }}
+              style={{ backgroundColor: "#FAFFE9" }}
             >
               {/* Inner question column */}
               <div className="flex flex-col gap-3 flex-1 min-h-0 min-w-0">
@@ -1133,7 +1144,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                 {/* Chart card */}
                 <div
                   className="flex flex-col gap-4 flex-1 min-h-0 p-4 border-[1.5px] border-black rounded-3xl"
-                  style={{ backgroundColor: "#DCCEA7" }}
+                  style={{ backgroundColor: "#F0F6DB" }}
                 >
                   {/* Title + Description */}
                   <div className="flex flex-col gap-1 shrink-0 text-left">
@@ -1148,7 +1159,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Chart area */}
                   <div
                     className="flex-1 min-h-0 p-4 rounded-3xl border-[1.5px] border-black"
-                    style={{ backgroundColor: "#F6E9C5" }}
+                    style={{ backgroundColor: "#FAFFE9" }}
                   >
                     {renderChart(currentChart)}
                   </div>
@@ -1192,7 +1203,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   <div className="flex flex-col gap-2.5 shrink-0">
                     <div
                       className="flex flex-col gap-2.5 p-4 rounded-3xl border-[1.5px] h-[140px] min-h-[140px] relative"
-                      style={{ backgroundColor: "#F6E9C5", borderColor: "#000000", boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 0.1)" }}
+                      style={{ backgroundColor: "#FAFFE9", borderColor: "#000000", boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 0.1)" }}
                     >
                       <div className="relative flex-1 min-h-0">
                         <textarea
