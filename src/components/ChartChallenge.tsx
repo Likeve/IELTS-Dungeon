@@ -510,7 +510,7 @@ function RoadmapStage({ label, desc, status, isFinal }: {
   return (
     <div
       className="flex items-center gap-2 px-4 py-3 rounded-full"
-      style={{ backgroundColor: stageBg, fontFamily: "PingFang SC, sans-serif" }}
+      style={{ backgroundColor: stageBg, fontFamily: "var(--font-langyuan), sans-serif" }}
     >
       <span
         className="text-[12px] font-black"
@@ -976,7 +976,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
             })}
             {typeCharts?.length === 0 && (
               <div className="col-span-full flex items-center justify-center py-20">
-                <p className="text-[14px] text-[#949478]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                <p className="text-[14px] text-[#949478]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                   暂无该类型的图表题目
                 </p>
               </div>
@@ -1265,7 +1265,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         )}
                       </div>
                       <div className="flex items-end justify-between gap-3">
-                        <span className="text-[12px] font-medium leading-[22px]" style={{ color: "#A7A794", fontFamily: "PingFang SC, sans-serif" }}>
+                        <span className="text-[12px] font-medium leading-[22px]" style={{ color: "#A7A794", fontFamily: "var(--font-langyuan), sans-serif" }}>
                           字词数: <span style={{ color: "#2C2C2C" }}>{paragraphInput.trim().split(/\s+/).filter(Boolean).length}</span>
                         </span>
                         <div className="flex items-center gap-2.5 relative">
@@ -1326,7 +1326,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                       {hoveredExpr === expr && exprDetails[expr] && (
                                         <div
                                           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-3 py-2 rounded-xl text-[11px] font-medium text-[#232323] z-20 shadow-sm w-56"
-                                          style={{ backgroundColor: "#FFFCF4", fontFamily: "PingFang SC, sans-serif" }}
+                                          style={{ backgroundColor: "#FFFCF4", fontFamily: "var(--font-langyuan), sans-serif" }}
                                         >
                                           <div className="font-bold mb-0.5">{exprDetails[expr].translation}</div>
                                           {exprDetails[expr].examples.length > 0 && (
@@ -1461,14 +1461,14 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         </div>
 
                         {!passed && (
-                          <p className="text-[13px] text-[#EF4444] mb-4" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                          <p className="text-[13px] text-[#EF4444] mb-4" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                             需要达到 3 星以上才能进入下一关，请根据建议修改后重新提交。
                           </p>
                         )}
 
                         {/* User's original paragraph */}
                         <div className="mb-4">
-                          <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>你的段落</h4>
+                          <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>你的段落</h4>
                           <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
                             {paragraphInputs[activeParagraph] || ""}
                           </p>
@@ -1476,10 +1476,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                         {ev.strengths.length > 0 && (
                           <div className="mb-4">
-                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>优点</h4>
+                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>优点</h4>
                             <ul className="flex flex-col gap-1">
                               {ev.strengths.map((s, i) => (
-                                <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                   • {s}
                                 </li>
                               ))}
@@ -1489,10 +1489,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                         {ev.issues.length > 0 && (
                           <div className="mb-4">
-                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>问题</h4>
+                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>问题</h4>
                             <ul className="flex flex-col gap-1">
                               {ev.issues.map((s, i) => (
-                                <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                   • {s}
                                 </li>
                               ))}
@@ -1502,10 +1502,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                         {ev.suggestions.length > 0 && (
                           <div className="mb-4">
-                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>改进建议</h4>
+                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>改进建议</h4>
                             <ul className="flex flex-col gap-1">
                               {ev.suggestions.map((s, i) => (
-                                <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                   • {s}
                                 </li>
                               ))}
@@ -1515,7 +1515,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                         {ev.band8Rewrite && (
                           <div className="mb-2">
-                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>Band 8+ 改写参考</h4>
+                            <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>Band 8+ 改写参考</h4>
                             <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
                               {ev.band8Rewrite}
                             </p>
@@ -1605,7 +1605,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                     <div className="grid grid-cols-4 gap-2 mb-5">
                       {essayEvaluation.paragraphBands.map((b, i) => (
                         <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-[#F7F7F1]">
-                          <span className="text-[11px] text-[#64725D]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                          <span className="text-[11px] text-[#64725D]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                             段落 {i + 1}
                           </span>
                           <span className="text-[16px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
@@ -1618,10 +1618,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                   {essayEvaluation.strengths.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>优点</h4>
+                      <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>优点</h4>
                       <ul className="flex flex-col gap-1">
                         {essayEvaluation.strengths.map((s, i) => (
-                          <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                          <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                             • {s}
                           </li>
                         ))}
@@ -1631,10 +1631,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                   {essayEvaluation.suggestions.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>改进建议</h4>
+                      <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>改进建议</h4>
                       <ul className="flex flex-col gap-1">
                         {essayEvaluation.suggestions.map((s, i) => (
-                          <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                          <li key={i} className="text-[12px] text-[#64725D] leading-relaxed" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                             • {s}
                           </li>
                         ))}
@@ -1644,7 +1644,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                   {essayEvaluation.band8Rewrite && (
                     <div className="mb-2">
-                      <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "PingFang SC, sans-serif" }}>Band 8+ 改写参考</h4>
+                      <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>Band 8+ 改写参考</h4>
                       <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
                         {essayEvaluation.band8Rewrite}
                       </p>
@@ -1677,7 +1677,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                 <div className="flex items-center justify-between px-6 py-5 border-b border-[#E8E5D8] shrink-0">
                   <div className="flex items-center gap-3">
                     <img src="/map.svg" alt="闯关地图" className="w-5 h-4" />
-                    <h2 className="text-lg font-black text-[#1D2838]" style={{ fontFamily: "zixiaohunlangyuanti, sans-serif" }}>闯关地图</h2>
+                    <h2 className="text-lg font-black text-[#1D2838]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>闯关地图</h2>
                   </div>
                   <button
                     onClick={() => setShowRoadmap(false)}
@@ -1693,7 +1693,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                       <Trophy className="w-5 h-5 text-[#232323]" />
                     </div>
                     <div>
-                      <p className="text-xs text-[#808771]" style={{ fontFamily: "PingFang SC, sans-serif" }}>总经验值</p>
+                      <p className="text-xs text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>总经验值</p>
                       <p className="text-lg font-black text-[#1D2838]" style={{ fontFamily: "var(--font-nunito)" }}>{xp} XP</p>
                     </div>
                   </div>
@@ -1740,7 +1740,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                             <div className="flex items-center gap-2">
                               <span className={`text-sm font-bold ${
                                 isLocked ? "text-[#9CA3AF]" : "text-[#232323]"
-                              }`} style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                              }`} style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                 {STAGE_LABELS[stage - 1]}
                               </span>
                               <span className={`text-xs font-bold ${
@@ -1757,7 +1757,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                               {stage === 1 && !stageCompleteForThis ? (
                                 <>
                                   <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-[10px] font-bold text-[#52B543] px-2 py-0.5 rounded-full bg-[#AFFF8A]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                    <span className="text-[10px] font-bold text-[#52B543] px-2 py-0.5 rounded-full bg-[#AFFF8A]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                       进行中
                                     </span>
                                     <span className="text-[10px] font-bold text-[#808771]" style={{ fontFamily: "var(--font-nunito)" }}>
@@ -1783,7 +1783,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                     })}
                                   </div>
                                   <div className="flex items-center justify-between">
-                                    <span className="text-[10px] text-[#808771]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                    <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                       问题回答
                                     </span>
                                     <span className="text-[10px] font-bold text-[#808771]" style={{ fontFamily: "var(--font-nunito)" }}>
@@ -1793,19 +1793,19 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                 </>
                               ) : isDone || stageCompleteForThis ? (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-[#065F46] px-2 py-0.5 rounded-full bg-[#A7F3D0]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                  <span className="text-[10px] font-bold text-[#065F46] px-2 py-0.5 rounded-full bg-[#A7F3D0]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                     已完成
                                   </span>
-                                  <span className="text-[10px] text-[#808771]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                  <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                     {stage === 1 ? "问题 + 段落写作" : "段落写作"}
                                   </span>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-[#52B543] px-2 py-0.5 rounded-full bg-[#AFFF8A]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                  <span className="text-[10px] font-bold text-[#52B543] px-2 py-0.5 rounded-full bg-[#AFFF8A]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                     进行中
                                   </span>
-                                  <span className="text-[10px] text-[#808771]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                  <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                     {stage === 1 ? "问题 + 段落写作" : "段落写作"}
                                   </span>
                                 </div>
@@ -1814,10 +1814,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           ) : isDone ? (
                             <div className="rounded-xl p-3 bg-[#ECFDF5] border border-[#A7F3D0]">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[#065F46] px-2 py-0.5 rounded-full bg-[#A7F3D0]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                <span className="text-[10px] font-bold text-[#065F46] px-2 py-0.5 rounded-full bg-[#A7F3D0]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                   已完成
                                 </span>
-                                <span className="text-[10px] text-[#808771]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                   {stage === 1 ? "问题 + 段落写作" : "段落写作"}
                                 </span>
                               </div>
@@ -1828,7 +1828,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                 <div className="w-3.5 h-3.5 rounded-full border border-[#D4D4C8] flex items-center justify-center">
                                   <div className="w-1.5 h-1.5 rounded-full bg-[#D4D4C8]" />
                                 </div>
-                                <span className="text-[10px] text-[#9CA3AF]" style={{ fontFamily: "PingFang SC, sans-serif" }}>
+                                <span className="text-[10px] text-[#9CA3AF]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                                   未解锁
                                 </span>
                               </div>
@@ -1844,7 +1844,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   <button
                     onClick={() => setShowRoadmap(false)}
                     className="w-full py-3 rounded-full bg-[#AFFF8A] border border-[#232323] text-sm font-black text-[#232323] hover:bg-[#98e87a] transition-colors flex items-center justify-center gap-2"
-                    style={{ fontFamily: "PingFang SC, sans-serif" }}
+                    style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
                   >
                     继续闯关
                     <ChevronRight className="w-4 h-4" />
