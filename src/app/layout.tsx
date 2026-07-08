@@ -1,17 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito } from "next/font/google";
-import localFont from "next/font/local";
 import "./globals.css";
-
-const langyuan = localFont({
-  src: "../../public/Fonts/字小魂朗圆体.ttf",
-  variable: "--font-langyuan",
-});
-
-const eduHandBold = localFont({
-  src: "../../public/Fonts/EduAUVICWANTHand-Bold.ttf",
-  variable: "--font-edu-hand-bold",
-});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} ${langyuan.variable} ${eduHandBold.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

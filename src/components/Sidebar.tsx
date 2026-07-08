@@ -22,21 +22,29 @@ const categories: { id: Category; label: string; icon: React.ComponentType<{ cla
   { id: "writing", label: "写作王国", icon: PenLine },
 ];
 
-const writingSubItems: { mode: GameMode; label: string }[] = [
+const listeningSubItems: { mode: GameMode; label: string }[] = [
+  { mode: "dictation", label: "听写作文" },
+];
+
+const readingSubItems: { mode: GameMode; label: string }[] = [
   { mode: "words", label: "词汇消消乐" },
   { mode: "phrases", label: "同义替换" },
+];
+
+const writingSubItems: { mode: GameMode; label: string }[] = [
   { mode: "sentences", label: "长难句锻造" },
-  { mode: "dictation", label: "听写作文" },
   { mode: "chart", label: "图表挑战赛" },
 ];
 
 export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSelect }: SidebarProps) {
   const [writingExpanded, setWritingExpanded] = useState(true);
+  const [readingExpanded, setReadingExpanded] = useState(true);
+  const [listeningExpanded, setListeningExpanded] = useState(true);
 
   return (
     <>
       {/* Desktop: Left Sidebar */}
-      <aside className="hidden md:flex w-fit shrink-0 flex-col border-r border-black bg-[#F6E9C5] px-4 py-6 gap-6 h-screen sticky top-0">
+      <aside className="hidden md:flex w-fit shrink-0 flex-col border-r border-black bg-[#FAFFE9] px-4 py-6 gap-6 h-screen sticky top-0">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-0">
           <img src="/logo2.svg" alt="Yasee" className="w-6 h-6" />
@@ -48,6 +56,8 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
           {categories.map((cat) => {
             const isActive = active === cat.id;
             const isWriting = cat.id === "writing";
+            const isReading = cat.id === "reading";
+            const isListening = cat.id === "listening";
 
             return (
               <div key={cat.id}>
@@ -55,6 +65,12 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                   onClick={() => {
                     if (isWriting) {
                       setWritingExpanded(!writingExpanded);
+                    }
+                    if (isReading) {
+                      setReadingExpanded(!readingExpanded);
+                    }
+                    if (isListening) {
+                      setListeningExpanded(!listeningExpanded);
                     }
                     onSelect(cat.id);
                   }}
@@ -76,7 +92,62 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                       <ChevronDown className="w-4 h-4 shrink-0" />
                     </motion.div>
                   )}
+                  {isReading && (
+                    <motion.div
+                      animate={{ rotate: readingExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="w-4 h-4 shrink-0" />
+                    </motion.div>
+                  )}
+                  {isListening && (
+                    <motion.div
+                      animate={{ rotate: listeningExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="w-4 h-4 shrink-0" />
+                    </motion.div>
+                  )}
                 </motion.button>
+
+                {/* Listening Sub-menu */}
+                {isListening && (
+                  <AnimatePresence initial={false}>
+                    {listeningExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
+                          {listeningSubItems.map((item) => {
+                            const isSubActive = activeGameMode === item.mode;
+                            return (
+                              <motion.button
+                                key={item.mode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onGameModeSelect(item.mode);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                className={`w-fit text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
+                                  isSubActive
+                                    ? "bg-[#ECECD9] text-[#080808] font-black"
+                                    : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
+                                }`}
+                              >
+                                {item.label}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                )}
 
                 {/* Writing Sub-menu */}
                 {isWriting && (
@@ -91,6 +162,45 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                       >
                         <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
                           {writingSubItems.map((item) => {
+                            const isSubActive = activeGameMode === item.mode;
+                            return (
+                              <motion.button
+                                key={item.mode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onGameModeSelect(item.mode);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                className={`w-fit text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
+                                  isSubActive
+                                    ? "bg-[#ECECD9] text-[#080808] font-black"
+                                    : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
+                                }`}
+                              >
+                                {item.label}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                )}
+
+                {/* Reading Sub-menu */}
+                {isReading && (
+                  <AnimatePresence initial={false}>
+                    {readingExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
+                          {readingSubItems.map((item) => {
                             const isSubActive = activeGameMode === item.mode;
                             return (
                               <motion.button
@@ -132,7 +242,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
       </aside>
 
       {/* Mobile: Bottom Tab Bar */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#F6E9C5] border-t border-black">
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAFFE9] border-t border-black">
         {categories.map((cat) => {
           const isActive = active === cat.id;
           return (

@@ -5,7 +5,7 @@ import { Flag, User, ArrowLeft } from "lucide-react";
 
 export default function Header({ chartDetail, onBack }: { chartDetail?: { stage: number } | null; onBack?: () => void }) {
   return (
-    <header className="h-[65px] shrink-0 flex items-center gap-3 px-4 bg-[#F6E9C5] border-b border-black sticky top-0 z-30">
+    <header className="h-[65px] shrink-0 flex items-center gap-3 px-4 bg-[#FAFFE9] border-b border-black sticky top-0 z-30">
       {chartDetail ? (
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <button onClick={onBack} className="p-1 hover:opacity-70 transition-opacity" aria-label="返回题目列表">

@@ -11,7 +11,7 @@ export default function Home() {
   const [insideCard, setInsideCard] = useState(false);
   const [chartView, setChartView] = useState<"list" | "detail">("list");
 
-  const isChartDetail = activeCategory === "writing" && gameMode === "chart" && chartView === "detail";
+  const isChartDetail = (activeCategory === "writing" || activeCategory === "reading") && gameMode === "chart" && chartView === "detail";
 
   return (
     <div className="h-screen flex overflow-hidden pb-14 md:pb-0">
@@ -25,7 +25,7 @@ export default function Home() {
       <div className="flex flex-col flex-1 min-h-0">
         <Header chartDetail={isChartDetail ? { stage: 1 } : undefined} onBack={() => setChartView("list")} />
 
-        {activeCategory === "writing" ? (
+        {activeCategory === "writing" || activeCategory === "reading" || activeCategory === "listening" ? (
           <MatchingGame
             initialGameMode={gameMode}
             onInsideChange={setInsideCard}

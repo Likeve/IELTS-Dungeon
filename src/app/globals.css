@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/* 本地字体 —— 通过 public/Fonts/ 目录直接加载 */
+@font-face {
+  font-family: "LangYuan";
+  src: url("/Fonts/字小魂朗圆体.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "EduHand";
+  src: url("/Fonts/EduAUVICWANTHand-Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #F7F6F0;
   --foreground: #232323;
+  --font-langyuan: "LangYuan", sans-serif;
+  --font-edu-hand-bold: "EduHand", sans-serif;
 }
 
 @theme inline {
