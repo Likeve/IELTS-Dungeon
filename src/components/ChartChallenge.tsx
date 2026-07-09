@@ -504,7 +504,7 @@ type StageStatus = "done" | "in_progress" | "available" | "locked";
 function RoadmapStage({ label, desc, status, isFinal }: {
   label: string; desc: string; status: StageStatus; isFinal?: boolean;
 }) {
-  const stageBg = status === "done" ? "#F7F7F1" : status === "in_progress" ? "#F7F7F1" : "#F7F7F1";
+  const stageBg = status === "done" ? "#F0F6DB" : status === "in_progress" ? "#F0F6DB" : "#F0F6DB";
   const labelOpacity = status === "locked" ? 0.5 : 1;
 
   return (
@@ -950,7 +950,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   className="bg-white rounded-3xl text-left flex flex-col gap-3 transition-all hover:brightness-[0.97] overflow-hidden h-fit p-4 cursor-pointer"
                 >
                   {/* Chart preview thumbnail — 16:9 */}
-                  <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", backgroundColor: "#F7F7F1" }}>
+                  <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", backgroundColor: "#F0F6DB" }}>
                     <div className="w-full h-full pointer-events-none" style={{ transform: "scale(0.6)", transformOrigin: "top left", width: "167%", height: "167%" }}>
                       <ChartCardPreview chart={chart} />
                     </div>
@@ -988,7 +988,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
       {/* ── Detail view (challenge) ── */}
       {view === "detail" && currentChart && (
       <>
-      <div className="flex flex-col flex-1 min-h-0 relative overflow-hidden" >
+      <div className="flex flex-col flex-1 min-h-0 relative overflow-hidden bg-[#F0F6DB]" >
         <div className="flex flex-col gap-4 flex-1 min-h-0 p-6">
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
@@ -1179,10 +1179,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                       const fb = questionFeedback[currentQ.id];
                       const isCorrectAnswer = fb && optKey === currentQ.correctAnswer;
 
-                      let bg = "#DCCEA7";
+                      let bg = "#F2FDC9";
                       let textColor = "#232323";
-                      let border = "1.5px solid #000000";
-                      let shadow = "none";
+                      let border = "1.5px solid #363636";
+                      let shadow = "0px 2px 0px #222222";
                       if (fb && isCorrectAnswer) { bg = "#ECFDF5"; textColor = "#065F46"; border = "1.5px solid #065F46"; shadow = "0px 4px 0px #A7F3D0"; }
                       else if (fb) { bg = "#F5F5F0"; textColor = "#9CA3AF"; border = "1.5px solid #D4D4C8"; shadow = "none"; }
 
@@ -1191,7 +1191,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           key={oi}
                           onClick={() => handleAnswer(optKey)}
                           disabled={!!fb}
-                          className="flex flex-row justify-center items-center gap-3 px-4 py-3 rounded-full text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default"
+                          className="flex flex-row justify-center items-center gap-2.5 px-4 py-4 rounded-[99px] text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default"
                           style={{ backgroundColor: bg, color: textColor, fontFamily: "var(--font-nunito), sans-serif", border, boxShadow: shadow }}
                         >
                           {opt.replace(/^[A-D]\s+/, "")}
@@ -1469,7 +1469,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         {/* User's original paragraph */}
                         <div className="mb-4">
                           <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>你的段落</h4>
-                          <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                          <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "Nunito, sans-serif" }}>
                             {paragraphInputs[activeParagraph] || ""}
                           </p>
                         </div>
@@ -1516,7 +1516,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         {ev.band8Rewrite && (
                           <div className="mb-2">
                             <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>Band 8+ 改写参考</h4>
-                            <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                            <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "Nunito, sans-serif" }}>
                               {ev.band8Rewrite}
                             </p>
                           </div>
@@ -1604,7 +1604,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {essayEvaluation.paragraphBands.length === 4 && (
                     <div className="grid grid-cols-4 gap-2 mb-5">
                       {essayEvaluation.paragraphBands.map((b, i) => (
-                        <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-[#F7F7F1]">
+                        <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-[#F0F6DB]">
                           <span className="text-[11px] text-[#64725D]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                             段落 {i + 1}
                           </span>
@@ -1645,7 +1645,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {essayEvaluation.band8Rewrite && (
                     <div className="mb-2">
                       <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>Band 8+ 改写参考</h4>
-                      <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F7F7F1]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                      <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "Nunito, sans-serif" }}>
                         {essayEvaluation.band8Rewrite}
                       </p>
                     </div>
