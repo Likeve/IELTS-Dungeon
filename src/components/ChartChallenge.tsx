@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star, ArrowLeft } from "lucide-react";
+import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star, Lock, Footprints, Flag, Target, Gem, Crown, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ParametricMapChart from "./ParametricMapChart";
 import {
@@ -214,6 +214,12 @@ const CHART_ICONS: Record<ChartType, React.ComponentType<{ className?: string }>
 
 const STAGE_LABELS = ["题目改写", "总览概括", "主体段落一", "主体段落二"];
 const STAGE_ENGLISH = ["Introduction", "Overview", "Details 1", "Details 2"];
+const STAGE_HINTS = [
+  "捕捉最显眼的趋势或极端值",
+  "用一句话概括整体变化",
+  "挑选关键数据展开描述",
+  "对比不同类别，补充细节",
+];
 
 const LINE_CHART_COLORS = ["#3F72E3", "#0DD6FF", "#0DFF9E"];
 
@@ -497,57 +503,103 @@ function GhostSuggestion({
   );
 }
 
-// ── Roadmap stage component ──────────────────────────────────────────
+// ── Roadmap stage component ─────────────────────────────────────────-
 
 type StageStatus = "done" | "in_progress" | "available" | "locked";
 
-function RoadmapStage({ label, desc, status, isFinal }: {
-  label: string; desc: string; status: StageStatus; isFinal?: boolean;
+const STAGE_ICONS = [Flag, Target, Gem, Crown, Trophy];
+const STAGE_REWARDS = ["50 XP", "80 XP", "120 XP", "150 XP", "神秘大奖"];
+
+function RoadmapStage({
+  stage,
+  label,
+  desc,
+  status,
+  isFinal,
+}: {
+  stage: number;
+  label: string;
+  desc: string;
+  status: StageStatus;
+  isFinal?: boolean;
 }) {
-  const stageBg = status === "done" ? "#F0F6DB" : status === "in_progress" ? "#F0F6DB" : "#F0F6DB";
-  const labelOpacity = status === "locked" ? 0.5 : 1;
+  const isLocked = status === "locked";
+  const isDone = status === "done";
+  const isCurrent = status === "in_progress";
+  const isAvailable = status === "available";
+  const Icon = STAGE_ICONS[stage - 1] || Flag;
 
   return (
-    <div
-      className="flex items-center gap-2 px-4 py-3 rounded-full"
-      style={{ backgroundColor: stageBg, fontFamily: "var(--font-langyuan), sans-serif" }}
+    <motion.div
+      initial={false}
+      animate={isCurrent ? { scale: [1, 1.03, 1] } : {}}
+      transition={{ repeat: isCurrent ? Infinity : 0, duration: 2, ease: "easeInOut" }}
+      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-2xl border-[1.5px] transition-colors ${
+        isDone
+          ? "bg-[#ECFDF5] border-[#52B543]"
+          : isCurrent
+          ? "bg-[#FAFFE9] border-[#232323] shadow-[0_2px_0_#222222]"
+          : isAvailable
+          ? "bg-white border-[#AFFF8A]"
+          : "bg-[#F5F5F0] border-[#D4D4C8]"
+      }`}
+      style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
     >
-      <span
-        className="text-[12px] font-black"
-        style={{ color: "#232323", opacity: labelOpacity, fontFamily: "Nunito, sans-serif" }}
+      {/* Stage icon */}
+      <div
+        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-[1.5px] ${
+          isDone
+            ? "bg-[#AFFF8A] border-[#52B543]"
+            : isCurrent
+            ? "bg-[#FCFF98] border-[#232323]"
+            : isAvailable
+            ? "bg-[#FCFF98] border-[#232323]"
+            : "bg-[#E5E5D8] border-[#D4D4C8]"
+        }`}
       >
-        {label}
-      </span>
-      {status === "done" && (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" fill="#09BE3C" stroke="#09BE3C" strokeWidth="2" />
-          <path d="M7 12l3 3 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
-      {status === "locked" && (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <rect x="5" y="11" width="14" height="10" rx="2" fill="#B0B8B0" />
-          <path d="M8 11V7a4 4 0 018 0v4" stroke="#B0B8B0" strokeWidth="2" />
-        </svg>
-      )}
-      {status === "available" && (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" fill="#FCFF98" stroke="#232323" strokeWidth="2" />
-          <path d="M12 7v10M7 12h10" stroke="#232323" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )}
-      {status === "in_progress" && (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" fill="#FCFF98" stroke="#232323" strokeWidth="2" />
-          <path d="M12 7v10M7 12h10" stroke="#232323" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      )}
+        {isDone ? (
+          <CheckCircle2 className="w-4 h-4 text-[#52B543]" />
+        ) : isLocked ? (
+          <Lock className="w-3.5 h-3.5 text-[#9CA3AF]" />
+        ) : (
+          <Icon className="w-4 h-4 text-[#232323]" />
+        )}
+      </div>
+
+      {/* Text */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[12px] font-black ${isLocked ? "text-[#9CA3AF]" : "text-[#232323]"}`}>
+            {label}
+          </span>
+          {!isFinal && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+              isDone
+                ? "bg-[#A7F3D0] text-[#065F46]"
+                : isCurrent
+                ? "bg-[#FCFF98] text-[#232323]"
+                : isAvailable
+                ? "bg-[#F3FAE3] text-[#52B543]"
+                : "bg-[#E5E5D8] text-[#9CA3AF]"
+            }`}>
+              {STAGE_REWARDS[stage - 1] || "..."}
+            </span>
+          )}
+        </div>
+        {!isFinal && (
+          <p className={`text-[11px] leading-tight mt-0.5 truncate ${isLocked ? "text-[#9CA3AF]" : "text-[#64725D]"}`}>
+            {desc}
+          </p>
+        )}
+      </div>
+
+      {/* Connector footstep */}
       {!isFinal && (
-        <span className="text-[12px] text-[#847C7C] ml-auto" style={{ opacity: labelOpacity }}>
-          {desc}
-        </span>
+        <div className="absolute -bottom-3 right-4 flex items-center justify-center">
+          <Footprints className={`w-3 h-3 rotate-90 ${isDone ? "text-[#52B543]" : "text-[#D4D4C8]"}`} />
+        </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -1056,32 +1108,49 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   </span>
                 </div>
 
-                {/* Stages list */}
+                {/* Winding game map */}
                 <div
-                  className="flex flex-col gap-2 p-4 border-[1.5px] border-black rounded-3xl flex-1"
+                  className="flex flex-col gap-1 p-3 border-[1.5px] border-black rounded-3xl flex-1 relative overflow-hidden"
                   style={{ backgroundColor: "#F0F6DB" }}
                 >
+                  {/* Decorative dotted path */}
+                  <svg className="absolute left-6 top-6 bottom-4 w-5 z-0" preserveAspectRatio="none">
+                    <path
+                      d="M10 0 Q4 36 10 72 Q16 108 10 144 Q4 180 10 216 Q16 252 10 288 Q4 324 10 360"
+                      fill="none"
+                      stroke="#C9CCBC"
+                      strokeWidth="2"
+                      strokeDasharray="5 5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+
                   <RoadmapStage
+                    stage={1}
                     label="Intro"
-                    desc="1. 寻找图表的变化最大的地方点"
+                    desc="寻找图表变化最大的地方"
                     status={activeParagraph === 1 ? "in_progress" : completedParagraphs.has(1) ? "done" : "locked"}
                   />
                   <RoadmapStage
+                    stage={2}
                     label="Overview"
-                    desc="1. 概括对比主要关键趋势特征"
+                    desc="概括对比主要关键趋势"
                     status={activeParagraph === 2 ? "in_progress" : completedParagraphs.has(2) ? "done" : unlockedParagraphNumbers.has(2) ? "available" : "locked"}
                   />
                   <RoadmapStage
+                    stage={3}
                     label="Details 1"
-                    desc="1. 编写第一个主体段"
+                    desc="编写第一个主体段"
                     status={activeParagraph === 3 ? "in_progress" : completedParagraphs.has(3) ? "done" : unlockedParagraphNumbers.has(3) ? "available" : "locked"}
                   />
                   <RoadmapStage
+                    stage={4}
                     label="Details 2"
-                    desc="1. 编写第二个主体段并进行对比"
+                    desc="编写第二个主体段并对比"
                     status={activeParagraph === 4 ? "in_progress" : completedParagraphs.has(4) ? "done" : unlockedParagraphNumbers.has(4) ? "available" : "locked"}
                   />
                   <RoadmapStage
+                    stage={5}
                     label="最终评分"
                     desc=""
                     status={completedParagraphs.size >= 4 ? "available" : "locked"}
@@ -1699,9 +1768,19 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                  <div className="relative pl-8">
-                    <div className="absolute left-[15px] top-2 bottom-2 w-[2px] bg-[#E0E0D5]" />
+                <div className="flex-1 overflow-y-auto px-5 py-5">
+                  <div className="relative pl-6">
+                    {/* Winding dotted path */}
+                    <svg className="absolute left-[11px] top-4 bottom-8 w-4 h-[calc(100%-3rem)]" preserveAspectRatio="none">
+                      <path
+                        d="M8 0 Q2 40 8 80 Q14 120 8 160 Q2 200 8 240 Q14 280 8 320 Q2 360 8 400 Q14 440 8 480"
+                        fill="none"
+                        stroke="#D4D4C8"
+                        strokeWidth="2"
+                        strokeDasharray="6 6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
 
                     {[1, 2, 3, 4].map((stage, i) => {
                       const isDone = completedParagraphs.has(stage);
@@ -1717,136 +1796,145 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         ? stageQuestions.length
                         : 4;
                       const stageCompleteForThis = stageComplete && activeParagraph === stage;
+                      const Icon = STAGE_ICONS[stage - 1] || Flag;
 
                       return (
-                        <div key={stage} className={`relative pb-5 ${i === 3 ? "pb-0" : ""}`}>
-                          <div className={`absolute left-[-23px] top-1 w-5 h-5 rounded-full border-2 flex items-center justify-center z-10 ${
+                        <motion.div
+                          key={stage}
+                          initial={false}
+                          animate={isCurrent ? { y: [0, -4, 0] } : {}}
+                          transition={{ repeat: isCurrent ? Infinity : 0, duration: 2.2, ease: "easeInOut" }}
+                          className={`relative pb-6 ${i === 3 ? "pb-0" : ""}`}
+                        >
+                          {/* Stage node */}
+                          <div className={`absolute left-[-13px] top-0 w-10 h-10 rounded-full border-2 flex items-center justify-center z-10 shadow-sm ${
                             isDone
                               ? "bg-[#AFFF8A] border-[#52B543]"
                               : isCurrent
-                              ? "bg-white border-[#AFFF8A]"
-                              : "bg-white border-[#D4D4C8]"
+                              ? "bg-[#FCFF98] border-[#232323]"
+                              : isLocked
+                              ? "bg-[#F5F5F0] border-[#D4D4C8]"
+                              : "bg-white border-[#AFFF8A]"
                           }`}>
                             {isDone ? (
-                              <CheckCircle2 className="w-3 h-3 text-[#52B543]" />
-                            ) : isCurrent ? (
-                              <div className="w-2 h-2 rounded-full bg-[#AFFF8A]" />
+                              <CheckCircle2 className="w-5 h-5 text-[#52B543]" />
+                            ) : isLocked ? (
+                              <Lock className="w-4 h-4 text-[#9CA3AF]" />
                             ) : (
-                              <div className="w-2 h-2 rounded-full bg-[#D4D4C8]" />
+                              <Icon className="w-5 h-5 text-[#232323]" />
                             )}
                           </div>
 
-                          <div className="mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-sm font-bold ${
-                                isLocked ? "text-[#9CA3AF]" : "text-[#232323]"
-                              }`} style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                {STAGE_LABELS[stage - 1]}
-                              </span>
-                              <span className={`text-xs font-bold ${
-                                isLocked ? "text-[#9CA3AF]" : "text-[#232323]"
-                              }`} style={{ fontFamily: "var(--font-edu-hand-bold)" }}>
+                          {/* Stage card */}
+                          <div className={`ml-7 rounded-2xl border-[1.5px] p-3 transition-colors ${
+                            isDone
+                              ? "bg-[#ECFDF5] border-[#52B543]"
+                              : isCurrent
+                              ? "bg-[#FAFFE9] border-[#232323] shadow-[0_2px_0_#222222]"
+                              : isLocked
+                              ? "bg-[#F5F5F0] border-[#D4D4C8]"
+                              : "bg-white border-[#AFFF8A]"
+                          }`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-black ${isLocked ? "text-[#9CA3AF]" : "text-[#232323]"}`} style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+                                  {STAGE_LABELS[stage - 1]}
+                                </span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  isDone
+                                    ? "bg-[#A7F3D0] text-[#065F46]"
+                                    : isCurrent
+                                    ? "bg-[#FCFF98] text-[#232323]"
+                                    : isLocked
+                                    ? "bg-[#E5E5D8] text-[#9CA3AF]"
+                                    : "bg-[#F3FAE3] text-[#52B543]"
+                                }`}>
+                                  {STAGE_REWARDS[stage - 1] || "..."}
+                                </span>
+                              </div>
+                              <span className={`text-[10px] font-bold ${isLocked ? "text-[#9CA3AF]" : "text-[#808771]"}`} style={{ fontFamily: "var(--font-edu-hand-bold)" }}>
                                 {STAGE_ENGLISH[stage - 1]}
                               </span>
                             </div>
-                          </div>
 
-                          {/* Stage detail card */}
-                          {isCurrent && !isLocked ? (
-                            <div className="rounded-xl p-3 bg-[#F3FAE3] border border-[#AFFF8A]">
-                              {stage === 1 && !stageCompleteForThis ? (
-                                <>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-[10px] font-bold text-[#52B543] px-2 py-0.5 rounded-full bg-[#AFFF8A]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                      进行中
-                                    </span>
-                                    <span className="text-[10px] font-bold text-[#808771]" style={{ fontFamily: "var(--font-nunito)" }}>
-                                      第 {currentQuestionIndex + 1}/{questionsTotal} 题
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1 mb-2">
-                                    {stageQuestions?.map((q, qi) => {
-                                      const fb = questionFeedback[q.id];
-                                      return (
-                                        <div
-                                          key={q.id}
-                                          className={`flex-1 h-1.5 rounded-full ${
-                                            fb
-                                              ? fb === "correct"
-                                                ? "bg-[#52B543]"
-                                                : "bg-[#EF4444]"
-                                              : "bg-[#E5E5D8]"
-                                          }`}
-                                          title={`第 ${qi + 1} 题${fb ? (fb === "correct" ? " ✅" : " ❌") : ""}`}
-                                        />
-                                      );
-                                    })}
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                      问题回答
-                                    </span>
-                                    <span className="text-[10px] font-bold text-[#808771]" style={{ fontFamily: "var(--font-nunito)" }}>
-                                      {questionsDone}/{questionsTotal}
-                                    </span>
-                                  </div>
-                                </>
-                              ) : isDone || stageCompleteForThis ? (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-[#065F46] px-2 py-0.5 rounded-full bg-[#A7F3D0]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                    已完成
-                                  </span>
-                                  <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                    {stage === 1 ? "问题 + 段落写作" : "段落写作"}
-                                  </span>
+                            <p className={`text-[11px] leading-relaxed mb-2 ${isLocked ? "text-[#9CA3AF]" : "text-[#64725D]"}`} style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+                              {isLocked ? "完成前一关即可解锁" : STAGE_HINTS[stage - 1]}
+                            </p>
+
+                            {/* Progress mini bar */}
+                            {isCurrent && !isLocked && stage === 1 && !stageCompleteForThis && (
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-[10px]">
+                                  <span className="text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>答题进度</span>
+                                  <span className="font-bold text-[#232323]" style={{ fontFamily: "var(--font-nunito)" }}>{questionsDone}/{questionsTotal}</span>
                                 </div>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-[#52B543] px-2 py-0.5 rounded-full bg-[#AFFF8A]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                    进行中
-                                  </span>
-                                  <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                    {stage === 1 ? "问题 + 段落写作" : "段落写作"}
-                                  </span>
+                                <div className="flex items-center gap-1">
+                                  {stageQuestions?.map((q) => {
+                                    const fb = questionFeedback[q.id];
+                                    return (
+                                      <div
+                                        key={q.id}
+                                        className={`flex-1 h-1.5 rounded-full ${
+                                          fb
+                                            ? fb === "correct"
+                                              ? "bg-[#52B543]"
+                                              : "bg-[#EF4444]"
+                                            : "bg-[#E5E5D8]"
+                                        }`}
+                                      />
+                                    );
+                                  })}
                                 </div>
-                              )}
-                            </div>
-                          ) : isDone ? (
-                            <div className="rounded-xl p-3 bg-[#ECFDF5] border border-[#A7F3D0]">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[#065F46] px-2 py-0.5 rounded-full bg-[#A7F3D0]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                  已完成
-                                </span>
-                                <span className="text-[10px] text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                  {stage === 1 ? "问题 + 段落写作" : "段落写作"}
+                              </div>
+                            )}
+
+                            {(isDone || stageCompleteForThis) && (
+                              <div className="flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-[#52B543]" />
+                                <span className="text-[10px] font-bold text-[#065F46]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+                                  已完成 · {stage === 1 ? "问题 + 段落写作" : "段落写作"}
                                 </span>
                               </div>
-                            </div>
-                          ) : (
-                            <div className="rounded-xl p-3 bg-[#F5F5F0] border border-[#E5E5D8]">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3.5 h-3.5 rounded-full border border-[#D4D4C8] flex items-center justify-center">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#D4D4C8]" />
-                                </div>
-                                <span className="text-[10px] text-[#9CA3AF]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                  未解锁
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        </motion.div>
                       );
                     })}
+
+                    {/* Final treasure chest */}
+                    <motion.div
+                      animate={{ scale: completedParagraphs.size >= 4 ? [1, 1.05, 1] : 1 }}
+                      transition={{ repeat: completedParagraphs.size >= 4 ? Infinity : 0, duration: 2 }}
+                      className={`relative ml-7 rounded-2xl border-[1.5px] p-3 flex items-center gap-3 ${
+                        completedParagraphs.size >= 4
+                          ? "bg-[#FCFF98] border-[#232323] shadow-[0_2px_0_#222222]"
+                          : "bg-[#F5F5F0] border-[#D4D4C8]"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                        completedParagraphs.size >= 4 ? "bg-[#AFFF8A] border-[#52B543]" : "bg-[#E5E5D8] border-[#D4D4C8]"
+                      }`}>
+                        {completedParagraphs.size >= 4 ? <Trophy className="w-5 h-5 text-[#232323]" /> : <Lock className="w-4 h-4 text-[#9CA3AF]" />}
+                      </div>
+                      <div>
+                        <p className={`text-sm font-black ${completedParagraphs.size >= 4 ? "text-[#232323]" : "text-[#9CA3AF]"}`} style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+                          最终评分
+                        </p>
+                        <p className={`text-[11px] ${completedParagraphs.size >= 4 ? "text-[#64725D]" : "text-[#9CA3AF]"}`} style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+                          {completedParagraphs.size >= 4 ? "领取你的通关大奖吧！" : "完成全部四关解锁"}
+                        </p>
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
 
                 <div className="px-6 py-4 border-t border-[#E8E5D8] shrink-0">
                   <button
                     onClick={() => setShowRoadmap(false)}
-                    className="w-full py-3 rounded-full bg-[#AFFF8A] border border-[#232323] text-sm font-black text-[#232323] hover:bg-[#98e87a] transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-full bg-[#AFFF8A] border-[1.5px] border-[#232323] text-sm font-black text-[#232323] hover:bg-[#98e87a] transition-colors flex items-center justify-center gap-2 shadow-[0_2px_0_#222222]"
                     style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
                   >
-                    继续闯关
+                    {completedParagraphs.size >= 4 ? "领取大奖" : "继续闯关"}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
