@@ -1044,58 +1044,8 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
         <div className="flex flex-col gap-4 flex-1 min-h-0 p-6">
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
-            {/* Left column: Clues panel + Roadmap */}
+            {/* Left column: Unified Roadmap + Stage Task panel */}
             <div className="w-full lg:w-[30%] flex flex-col gap-4 min-h-0 h-full overflow-y-auto">
-              {/* Clues panel */}
-              <div
-                className="shrink-0 flex flex-col gap-3 p-4 border-[1.5px] border-black rounded-3xl"
-                style={{ backgroundColor: "#FAFFE9" }}
-              >
-                <span
-                  className="text-[14px]"
-                  style={{ fontFamily: "var(--font-langyuan), sans-serif", color: "#000000" }}
-                >
-                  🧩 线索区
-                </span>
-
-                {/* 3 clue slots that fill progressively */}
-                <div className="flex flex-col gap-2">
-                  {[0, 1, 2].map((idx) => {
-                    const clue = discoveredClues[idx];
-                    if (clue) {
-                      return (
-                        <div
-                          key={idx}
-                          className="px-3 py-3 rounded-2xl flex items-start gap-2 border-[1.5px] border-black"
-                          style={{ backgroundColor: "#F0F6DB" }}
-                        >
-                          <span className="text-[14px] font-bold text-[#232323] shrink-0" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                            {idx + 1}.
-                          </span>
-                          <p className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                            {clue}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-center px-3 py-[12px] gap-2 rounded-2xl border-[1.5px] border-dashed"
-                        style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC", height: "46px" }}
-                      >
-                        <span
-                          className="text-[14px] font-bold shrink-0"
-                          style={{ color: "#C9CCBC", fontFamily: "var(--font-nunito), sans-serif" }}
-                        >
-                          待发现线索{idx + 1}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Roadmap card */}
               <div
                 className="flex flex-col gap-3 p-4 border-[1.5px] border-black rounded-3xl flex-1 min-h-0"
@@ -1110,7 +1060,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                 {/* Winding game map */}
                 <div
-                  className="flex flex-col gap-1 p-3 border-[1.5px] border-black rounded-3xl flex-1 relative overflow-hidden"
+                  className="flex flex-col gap-1 p-3 border-[1.5px] border-black rounded-3xl relative overflow-hidden"
                   style={{ backgroundColor: "#F0F6DB" }}
                 >
                   {/* Decorative dotted path */}
@@ -1156,6 +1106,78 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                     status={completedParagraphs.size >= 4 ? "available" : "locked"}
                     isFinal
                   />
+                </div>
+
+                {/* Stage work area: clues during challenge, completed paragraph after */}
+                <div className="flex flex-col gap-2 mt-1">
+                  {completedParagraphs.has(activeParagraph) || (stageComplete && paragraphInputs[activeParagraph]) ? (
+                    <>
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[12px] font-black text-[#065F46] px-2 py-0.5 rounded-full bg-[#A7F3D0]">
+                          ✅ 已完成段落
+                        </span>
+                        <span className="text-[10px] text-[#808771]">
+                          {STAGE_LABELS[activeParagraph - 1]}
+                        </span>
+                      </div>
+                      <div
+                        className="px-3 py-3 rounded-2xl border-[1.5px] border-[#52B543] bg-[#ECFDF5]"
+                      >
+                        <p className="text-[13px] leading-[22px] text-[#232323]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                          {paragraphInputs[activeParagraph] || paragraphInput}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 px-1">
+                        <span
+                          className="text-[14px] font-black text-[#232323]"
+                          style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
+                        >
+                          🧩 当前任务
+                        </span>
+                        <span className="text-[10px] text-[#808771]">
+                          收集线索，完成{STAGE_LABELS[activeParagraph - 1]}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {[0, 1, 2].map((idx) => {
+                          const clue = discoveredClues[idx];
+                          if (clue) {
+                            return (
+                              <div
+                                key={idx}
+                                className="px-3 py-3 rounded-2xl flex items-start gap-2 border-[1.5px] border-black"
+                                style={{ backgroundColor: "#F0F6DB" }}
+                              >
+                                <span className="text-[14px] font-bold text-[#232323] shrink-0" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                                  {idx + 1}.
+                                </span>
+                                <p className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                                  {clue}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center px-3 py-[12px] gap-2 rounded-2xl border-[1.5px] border-dashed"
+                              style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC", height: "46px" }}
+                            >
+                              <span
+                                className="text-[14px] font-bold shrink-0"
+                                style={{ color: "#C9CCBC", fontFamily: "var(--font-nunito), sans-serif" }}
+                              >
+                                待发现线索{idx + 1}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1481,7 +1503,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   exit={{ opacity: 0, scale: 0.95, y: 16 }}
                   transition={{ duration: 0.25 }}
                   className="bg-white rounded-3xl p-6 w-full max-w-[720px] max-h-[80vh] overflow-y-auto shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-[18px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
@@ -1644,7 +1666,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   exit={{ opacity: 0, scale: 0.95, y: 16 }}
                   transition={{ duration: 0.25 }}
                   className="bg-white rounded-3xl p-6 w-full max-w-[720px] max-h-[80vh] overflow-y-auto shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-[18px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
