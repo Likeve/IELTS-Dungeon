@@ -2,7 +2,16 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Headphones, Mic, BookOpen, PenLine, Settings, ChevronDown } from "lucide-react";
+import {
+  Headphones,
+  Mic,
+  BookOpen,
+  PenLine,
+  Settings,
+  ChevronDown,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
 
 export type Category = "listening" | "speaking" | "reading" | "writing";
 
@@ -15,85 +24,146 @@ type SidebarProps = {
   onGameModeSelect: (mode: GameMode) => void;
 };
 
-const categories: { id: Category; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "listening", label: "听力岛屿", icon: Headphones },
-  { id: "speaking", label: "口语战场", icon: Mic },
-  { id: "reading", label: "阅读山丘", icon: BookOpen },
-  { id: "writing", label: "写作王国", icon: PenLine },
+const categories: {
+  id: Category;
+  label: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accent: string;
+}[] = [
+  {
+    id: "listening",
+    label: "听力岛屿",
+    subtitle: "Listening Isle",
+    icon: Headphones,
+    accent: "#A78BFA",
+  },
+  {
+    id: "speaking",
+    label: "口语战场",
+    subtitle: "Speaking Arena",
+    icon: Mic,
+    accent: "#FB923C",
+  },
+  {
+    id: "reading",
+    label: "阅读山丘",
+    subtitle: "Reading Hills",
+    icon: BookOpen,
+    accent: "#4ADE80",
+  },
+  {
+    id: "writing",
+    label: "写作王国",
+    subtitle: "Writing Kingdom",
+    icon: PenLine,
+    accent: "#FACC15",
+  },
 ];
 
-const listeningSubItems: { mode: GameMode; label: string }[] = [
-  { mode: "dictation", label: "听写作文" },
-];
+const subMenuMap: Record<string, { mode: GameMode; label: string; emoji: string }[]> = {
+  listening: [{ mode: "dictation", label: "听写作文", emoji: "🎧" }],
+  reading: [
+    { mode: "words", label: "词汇消消乐", emoji: "🧩" },
+    { mode: "phrases", label: "同义替换", emoji: "🔄" },
+  ],
+  writing: [
+    { mode: "sentences", label: "长难句锻造", emoji: "⚒️" },
+    { mode: "chart", label: "图表挑战赛", emoji: "📊" },
+  ],
+};
 
-const readingSubItems: { mode: GameMode; label: string }[] = [
-  { mode: "words", label: "词汇消消乐" },
-  { mode: "phrases", label: "同义替换" },
-];
+export default function Sidebar({
+  active,
+  onSelect,
+  activeGameMode,
+  onGameModeSelect,
+}: SidebarProps) {
+  const [expanded, setExpanded] = useState<Record<Category, boolean>>({
+    listening: true,
+    speaking: false,
+    reading: true,
+    writing: true,
+  });
 
-const writingSubItems: { mode: GameMode; label: string }[] = [
-  { mode: "sentences", label: "长难句锻造" },
-  { mode: "chart", label: "图表挑战赛" },
-];
-
-export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSelect }: SidebarProps) {
-  const [writingExpanded, setWritingExpanded] = useState(true);
-  const [readingExpanded, setReadingExpanded] = useState(true);
-  const [listeningExpanded, setListeningExpanded] = useState(true);
+  const toggle = (id: Category) =>
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <>
       {/* Desktop: Left Sidebar */}
-      <aside className="hidden md:flex w-fit shrink-0 flex-col bg-[#FAFFE9] px-4 py-6 gap-6 h-screen sticky top-0">
+      <aside className="hidden md:flex w-[240px] shrink-0 flex-col bg-[#FAFFE9] px-4 py-5 h-screen sticky top-0 border-r-[1.5px] border-black/5">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-0">
-          <img src="/logo2.svg" alt="Yasee" className="w-6 h-6" />
-          <span className="text-2xl font-black text-[#1D2838]">Yasee</span>
+        <div className="flex items-center gap-2.5 px-2 mb-6">
+          <div className="w-9 h-9 rounded-xl bg-[#FCFF98] border-[1.5px] border-black flex items-center justify-center shadow-[0_2px_0_#222]">
+            <img src="/logo2.svg" alt="Yasee" className="w-6 h-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xl font-black text-[#1D2838] leading-none">Yasee</span>
+            <span className="text-[10px] font-bold text-[#808771] leading-none mt-0.5">
+              雅思修炼场
+            </span>
+          </div>
+        </div>
+
+        {/* Player mini card */}
+        <div className="mx-2 mb-5 rounded-2xl border-[1.5px] border-black p-3 bg-white shadow-[0_2px_0_#222]">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-full bg-[#AFFF8A] border border-black flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-[#232323]" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-black text-[#232323] truncate">Lv.4 烤鸭勇士</span>
+              <div className="w-full h-1.5 bg-[#E5E5D8] rounded-full mt-1 overflow-hidden">
+                <div className="h-full w-[60%] bg-[#AFFF8A] rounded-full" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Nav Items */}
-        <div className="flex flex-col gap-1 flex-1 items-start">
+        <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto px-2">
           {categories.map((cat) => {
             const isActive = active === cat.id;
-            const isExpandable = cat.id === "listening" || cat.id === "reading" || cat.id === "writing";
-            const isExpanded =
-              cat.id === "listening" ? listeningExpanded :
-              cat.id === "reading" ? readingExpanded :
-              writingExpanded;
-            const setExpanded =
-              cat.id === "listening" ? setListeningExpanded :
-              cat.id === "reading" ? setReadingExpanded :
-              setWritingExpanded;
-            const subItems =
-              cat.id === "listening" ? listeningSubItems :
-              cat.id === "reading" ? readingSubItems :
-              writingSubItems;
+            const isExpandable = !!subMenuMap[cat.id];
+            const isExpanded = expanded[cat.id];
+            const subItems = subMenuMap[cat.id] || [];
 
             return (
               <div key={cat.id}>
                 <motion.button
                   onClick={() => {
-                    if (isExpandable) {
-                      setExpanded(!isExpanded);
-                    }
+                    if (isExpandable) toggle(cat.id);
                     onSelect(cat.id);
                   }}
-                  whileHover={isActive ? {} : { scale: 1.02 }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className={`w-fit flex items-center gap-3 px-4 py-3.5 rounded-full text-sm transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-sm transition-all border-[1.5px] ${
                     isActive
-                      ? "bg-[#F3FAE3] text-black font-black"
-                      : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
+                      ? "bg-white border-black shadow-[0_2px_0_#222] text-black font-black"
+                      : "bg-transparent border-transparent text-[#64725D] font-medium hover:bg-white/60"
                   }`}
                 >
-                  <cat.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-[#232323]" : "text-[#808771]"}`} />
-                  <span className="whitespace-nowrap text-left">{cat.label}</span>
+                  <div
+                    className="w-8 h-8 rounded-full border-[1.5px] border-black flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: isActive ? cat.accent : "#F5F5F0" }}
+                  >
+                    <cat.icon className="w-4 h-4 text-[#232323]" />
+                  </div>
+                  <div className="flex flex-col items-start flex-1 min-w-0">
+                    <span className="whitespace-nowrap text-left leading-none">
+                      {cat.label}
+                    </span>
+                    <span className="text-[9px] font-bold text-[#808771] mt-0.5">
+                      {cat.subtitle}
+                    </span>
+                  </div>
                   {isExpandable && (
                     <motion.div
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <ChevronDown className="w-4 h-4 shrink-0" />
+                      <ChevronDown className="w-4 h-4 shrink-0 text-[#808771]" />
                     </motion.div>
                   )}
                 </motion.button>
@@ -109,7 +179,7 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
-                        <div className="flex flex-col gap-0.5 ml-11 mt-0.5 mb-0.5">
+                        <div className="flex flex-col gap-1 ml-5 pl-5 mt-1 mb-1 border-l-2 border-dashed border-[#D4D4C8]">
                           {subItems.map((item) => {
                             const isSubActive = activeGameMode === item.mode;
                             return (
@@ -119,15 +189,16 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
                                   e.stopPropagation();
                                   onGameModeSelect(item.mode);
                                 }}
-                                whileHover={{ scale: 1.02 }}
+                                whileHover={{ x: 3 }}
                                 whileTap={{ scale: 0.97 }}
-                                className={`w-fit text-left px-3 py-2 rounded-full text-xs transition-all whitespace-nowrap ${
+                                className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all whitespace-nowrap flex items-center gap-2 border-[1.5px] ${
                                   isSubActive
-                                    ? "bg-[#ECECD9] text-[#080808] font-black"
-                                    : "text-[#808771] font-medium hover:bg-[#F9F6ED]"
+                                    ? "bg-[#FCFF98] border-black text-[#232323] font-black shadow-[0_1px_0_#222]"
+                                    : "bg-white/40 border-transparent text-[#64725D] font-medium hover:bg-white"
                                 }`}
                               >
-                                {item.label}
+                                <span>{item.emoji}</span>
+                                <span>{item.label}</span>
                               </motion.button>
                             );
                           })}
@@ -141,18 +212,30 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
           })}
         </div>
 
+        {/* Daily quest hint */}
+        <div className="mx-2 mt-3 mb-3 rounded-2xl border-[1.5px] border-[#AFFF8A] bg-[#F3FAE3] p-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#52B543]" />
+            <span className="text-[11px] font-black text-[#232323]">今日目标</span>
+          </div>
+          <p className="text-[10px] text-[#64725D] leading-relaxed">
+            完成 1 篇图表写作，冲击 7 分小作文！
+          </p>
+        </div>
+
         {/* Settings */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="w-14 h-14 rounded-2xl bg-[#F2F4F6] flex items-center justify-center mx-auto transition-colors hover:bg-[#EAECEE]"
+          className="mx-2 flex items-center gap-2 px-3 py-2.5 rounded-xl border-[1.5px] border-black bg-[#F2F4F6] hover:bg-[#EAECEE] transition-colors"
         >
-          <Settings className="w-6 h-6 text-[#808771]" />
+          <Settings className="w-4 h-4 text-[#808771]" />
+          <span className="text-xs font-bold text-[#64725D]">设置</span>
         </motion.button>
       </aside>
 
       {/* Mobile: Bottom Tab Bar */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAFFE9] border-t border-black">
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAFFE9] border-t border-black px-2 pb-safe">
         {categories.map((cat) => {
           const isActive = active === cat.id;
           return (
@@ -161,17 +244,22 @@ export default function Sidebar({ active, onSelect, activeGameMode, onGameModeSe
               onClick={() => onSelect(cat.id)}
               whileTap={{ scale: 0.9 }}
               className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 py-3 transition-all ${
-                isActive
-                  ? "text-black"
-                  : "text-[#808771]"
+                isActive ? "text-black" : "text-[#808771]"
               }`}
             >
-              <cat.icon className="w-5 h-5" />
-              <span className="text-[10px] font-bold">{cat.label}</span>
+              <div
+                className={`w-8 h-8 rounded-full border-[1.5px] border-black flex items-center justify-center ${
+                  isActive ? "shadow-[0_1px_0_#222]" : ""
+                }`}
+                style={{ backgroundColor: isActive ? cat.accent : "transparent" }}
+              >
+                <cat.icon className="w-4 h-4" />
+              </div>
+              <span className="text-[9px] font-bold">{cat.label}</span>
               {isActive && (
                 <motion.div
                   layoutId="mobileActiveTab"
-                  className="absolute top-0 left-2 right-2 h-0.5 rounded-full bg-[#AFFF8A]"
+                  className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-black"
                 />
               )}
             </motion.button>
