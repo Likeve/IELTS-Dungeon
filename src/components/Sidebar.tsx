@@ -95,17 +95,13 @@ export default function Sidebar({
   const toggle = (id: Category) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const sidebarWidth = collapsed ? 72 : 240;
-
   return (
     <>
       {/* Desktop: Left Sidebar */}
-      <motion.aside
-        animate={{ width: sidebarWidth }}
-        transition={{ type: "spring", damping: 25, stiffness: 250 }}
-        className="hidden md:flex shrink-0 flex-col bg-[#FAFFE9] px-3 py-5 h-screen sticky top-0 border-r-[1.5px] border-black/5 overflow-hidden"
-      >
-        {/* Toggle button */}
+      <aside
+        className={`hidden md:flex shrink-0 flex-col bg-[#FAFFE9] h-screen sticky top-0 border-r-[1.5px] border-black/5 overflow-hidden transition-all duration-300 ${
+          collapsed ? "w-[72px] px-1 py-5" : "w-[240px] px-4 py-5"
+        }`}>
         <button
           onClick={onToggleCollapse}
           className="absolute -right-3 top-6 w-6 h-6 rounded-full bg-white border-[1.5px] border-[#D4D4C8] flex items-center justify-center z-10 hover:bg-[#F5F5F0] transition-colors shadow-sm"
@@ -307,7 +303,7 @@ export default function Sidebar({
             </motion.button>
           </>
         )}
-      </motion.aside>
+      </aside>
 
       {/* Mobile: Bottom Tab Bar */}
       <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAFFE9] border-t border-[#D4D4C8] px-2 pb-safe">

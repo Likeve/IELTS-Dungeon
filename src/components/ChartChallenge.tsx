@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star } from "lucide-react";
+import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, Send, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ParametricMapChart from "./ParametricMapChart";
 import {
@@ -471,8 +471,8 @@ function GhostSuggestion({
 
 type StageStatus = "done" | "in_progress" | "available" | "locked";
 
-const STAGE_TITLES = ["题目改写", "概览", "主体细节一", "主体细节一"];
-const STAGE_SUBTITLES = ["Introduction", "Overview", "Details 1", "Details 1"];
+const STAGE_TITLES = ["题目改写", "概览", "主线细节一", "主线细节二"];
+const STAGE_SUBTITLES = ["Introduction", "Overview", "Details 1", "Details 2"];
 const STAGE_BADGES = ["段落一", "段落二", "段落三", "段落四"];
 const STAGE_DESCRIPTIONS = [
   "把题目用自己的话重新表达，不加入任何分析或观点。",
@@ -538,7 +538,7 @@ function StageCard({
           style={{ backgroundColor: "#DBE3C2" }}
         >
           {isDone ? (
-            <CheckCircle2 className="w-6 h-6 text-[#52B543]" />
+            <img src="/tick-circle.svg" alt="completed" className="w-6 h-6" />
           ) : isLocked ? (
             <img src="/lock.svg" alt="locked" className="w-6 h-6" />
           ) : (
@@ -562,8 +562,8 @@ function StageCard({
 
         {/* Badge */}
         <div
-          className="px-2 py-1 rounded-lg shrink-0"
-          style={{ backgroundColor: isInProgress ? "#56F7AC" : "#DBE3C2" }}
+          className="rounded-lg shrink-0 flex items-center"
+          style={{ backgroundColor: isInProgress ? "#56F7AC" : "#DBE3C2", padding: "4px 8px" }}
         >
           <span className="text-[12px] leading-[20px] font-medium text-[#191919]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
             {STAGE_BADGES[stage - 1]}
@@ -1127,7 +1127,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Stage 1 */}
                   <StageCard
                     stage={1}
-                    status={activeParagraph === 1 ? "in_progress" : "available"}
+                    status={completedParagraphs.has(1) ? "done" : activeParagraph === 1 ? "in_progress" : "available"}
                     isActive={activeParagraph === 1}
                     onClick={() => handleStageClick(1)}
                   >
@@ -1179,7 +1179,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Stage 2 */}
                   <StageCard
                     stage={2}
-                    status={activeParagraph === 2 ? "in_progress" : unlockedParagraphNumbers.has(2) ? "available" : "locked"}
+                    status={completedParagraphs.has(2) ? "done" : activeParagraph === 2 ? "in_progress" : unlockedParagraphNumbers.has(2) ? "available" : "locked"}
                     isActive={activeParagraph === 2}
                     onClick={unlockedParagraphNumbers.has(2) ? () => handleStageClick(2) : undefined}
                   >
@@ -1231,7 +1231,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Stage 3 */}
                   <StageCard
                     stage={3}
-                    status={activeParagraph === 3 ? "in_progress" : unlockedParagraphNumbers.has(3) ? "available" : "locked"}
+                    status={completedParagraphs.has(3) ? "done" : activeParagraph === 3 ? "in_progress" : unlockedParagraphNumbers.has(3) ? "available" : "locked"}
                     isActive={activeParagraph === 3}
                     onClick={unlockedParagraphNumbers.has(3) ? () => handleStageClick(3) : undefined}
                   >
@@ -1284,7 +1284,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Stage 4 */}
                   <StageCard
                     stage={4}
-                    status={activeParagraph === 4 ? "in_progress" : unlockedParagraphNumbers.has(4) ? "available" : "locked"}
+                    status={completedParagraphs.has(4) ? "done" : activeParagraph === 4 ? "in_progress" : unlockedParagraphNumbers.has(4) ? "available" : "locked"}
                     isActive={activeParagraph === 4}
                     onClick={unlockedParagraphNumbers.has(4) ? () => handleStageClick(4) : undefined}
                   >
@@ -1970,11 +1970,13 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         : 4;
                       const stageCompleteForThis = stageComplete && activeParagraph === stage;
 
+                      const isDone = completedParagraphs.has(stage);
+
                       return (
                         <StageCard
                           key={stage}
                           stage={stage}
-                          status={isCurrent ? "in_progress" : isLocked ? "locked" : "available"}
+                          status={isDone ? "done" : isCurrent ? "in_progress" : isLocked ? "locked" : "available"}
                           isActive={isCurrent}
                           onClick={isLocked ? undefined : () => { handleStageClick(stage); setShowRoadmap(false); }}
                         >
