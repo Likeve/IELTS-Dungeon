@@ -592,11 +592,11 @@ export default function MatchingGame({ initialGameMode, onInsideChange, chartVie
                       initial={{ rotate: -10 }}
                       animate={{ rotate: [0, 5, -5, 0] }}
                       transition={{ duration: 0.6, repeat: 1 }}
-                      className="text-lg font-black text-[#AFFF8A] [font-family:var(--font-nunito)]"
+                      className="text-lg font-black text-[#AFFF8A] [font-family:var(--font-inter)]"
                     >
                       {comboText}
                     </motion.span>
-                    <span className="text-lg font-black text-white [font-family:var(--font-nunito)]">
+                    <span className="text-lg font-black text-white [font-family:var(--font-inter)]">
                       x{comboCount}
                     </span>
                   </div>
@@ -661,7 +661,7 @@ export default function MatchingGame({ initialGameMode, onInsideChange, chartVie
                         whileTap={isSuccess ? undefined : { scale: 0.98 }}
                         onClick={() => handleItemClick(item)}
                         className={`
-                          p-4 rounded-full text-lg font-black border transition-colors duration-200 text-center relative [font-family:var(--font-nunito)]
+                          p-4 rounded-full text-lg font-black border transition-colors duration-200 text-center relative [font-family:var(--font-inter)]
                           ${isSuccess
                             ? 'bg-transparent border-transparent'
                             : isError 
@@ -708,7 +708,7 @@ export default function MatchingGame({ initialGameMode, onInsideChange, chartVie
                         whileTap={isSuccess ? undefined : { scale: 0.98 }}
                         onClick={() => handleItemClick(item)}
                         className={`
-                          p-4 rounded-full text-lg font-normal border transition-colors duration-200 text-center relative ${gameMode === "phrases" ? "[font-family:var(--font-nunito)]" : "[font-family:var(--font-langyuan)]"}
+                          p-4 rounded-full text-lg font-normal border transition-colors duration-200 text-center relative ${gameMode === "phrases" ? "[font-family:var(--font-inter)]" : "[font-family:var(--font-langyuan)]"}
                           ${isSuccess
                             ? 'bg-transparent border-transparent'
                             : isError 
@@ -784,7 +784,7 @@ export default function MatchingGame({ initialGameMode, onInsideChange, chartVie
                             <span className="w-7 h-7 rounded-full bg-[#ECECD9] text-[#1D2838] text-xs font-bold flex items-center justify-center shrink-0">
                               {idx + 1}
                             </span>
-                            <span className="text-lg font-black text-[#080808] [font-family:var(--font-nunito)]">{pair.left}</span>
+                            <span className="text-lg font-black text-[#080808] [font-family:var(--font-inter)]">{pair.left}</span>
                             <span className="text-base text-[#8C8C6D] [font-family:var(--font-langyuan)]">{pair.right}</span>
                           </div>
                           {examples && (

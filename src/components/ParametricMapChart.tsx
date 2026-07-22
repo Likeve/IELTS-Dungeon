@@ -334,7 +334,7 @@ export default function ParametricMapChart({ data }: MapChartProps) {
 
         {/* Compass */}
         <div className="mt-1 flex flex-col items-center" style={{ opacity: 0.6 }}>
-          <span className="text-[9px] font-black text-[#8B9A8B]" style={{ fontFamily: "Nunito, sans-serif" }}>N</span>
+          <span className="text-[9px] font-black text-[#8B9A8B]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>N</span>
           <div className="w-4 h-4 relative">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-b-[6px] border-l-transparent border-r-transparent border-b-[#8B9A8B]" />
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#B0B8B0]" />
@@ -487,7 +487,7 @@ export default function ParametricMapChart({ data }: MapChartProps) {
                     fontSize={ts(9)}
                     fontWeight={700}
                     fill="#4A5568"
-                    fontFamily="Nunito, sans-serif"
+                    fontFamily="var(--font-inter), sans-serif"
                   >
                     {edge.label}
                   </text>
@@ -506,7 +506,7 @@ export default function ParametricMapChart({ data }: MapChartProps) {
                 fontSize={ts(11)}
                 fontWeight={800}
                 fill="#2C3E50"
-                fontFamily="Nunito, sans-serif"
+                fontFamily="var(--font-inter), sans-serif"
                 style={{ textShadow: `0 0 ${ts(4)}px rgba(255,255,255,0.8)` }}
               >
                 {node.label}
@@ -543,7 +543,7 @@ export default function ParametricMapChart({ data }: MapChartProps) {
               <rect x={0} y={0} width={ts(60)} height={ts(4)} fill="#2C3E50" rx={ts(2)} />
               <rect x={0} y={ts(4)} width={ts(1)} height={ts(6)} fill="#2C3E50" />
               <rect x={ts(60)} y={ts(4)} width={ts(1)} height={ts(6)} fill="#2C3E50" />
-              <text x={ts(30)} y={ts(14)} textAnchor="middle" fontSize={ts(7)} fill="#7F8C8D" fontFamily="Nunito, sans-serif">
+              <text x={ts(30)} y={ts(14)} textAnchor="middle" fontSize={ts(7)} fill="#7F8C8D" fontFamily="var(--font-inter), sans-serif">
                 NTS
               </text>
             </g>
@@ -557,14 +557,14 @@ export default function ParametricMapChart({ data }: MapChartProps) {
           {legendItems.map(item => (
             <div key={`leg-${item.id}`} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.75)" }}>
               <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0 border border-[#7F8C8D]/30" style={{ background: getMapFill(item.id) }} />
-              <span className="text-[8px] font-semibold text-[#4A5568] leading-none" style={{ fontFamily: "Nunito, sans-serif" }}>{item.label}</span>
+              <span className="text-[8px] font-semibold text-[#4A5568] leading-none" style={{ fontFamily: "var(--font-inter), sans-serif" }}>{item.label}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* Zoom % indicator */}
-      <div className="absolute bottom-2 right-3 z-30 text-[10px] font-bold text-[#7F8C8D]" style={{ fontFamily: "Nunito, sans-serif" }}>
+      <div className="absolute bottom-2 right-3 z-30 text-[10px] font-bold text-[#7F8C8D]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
         {Math.round(zoom * 100)}%
       </div>
     </div>

@@ -2,16 +2,24 @@
 
 /* 本地字体 —— 通过 public/Fonts/ 目录直接加载 */
 @font-face {
-  font-family: "LangYuan";
-  src: url("/Fonts/字小魂朗圆体.ttf") format("truetype");
+  font-family: "AlibabaPuHuiTi";
+  src: url("/Fonts/AlibabaPuHuiTi-2-55-Regular.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "EduHand";
-  src: url("/Fonts/EduAUVICWANTHand-Bold.ttf") format("truetype");
+  font-family: "AlibabaPuHuiTi";
+  src: url("/Fonts/AlibabaPuHuiTi-2-65-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AlibabaPuHuiTi";
+  src: url("/Fonts/AlibabaPuHuiTi-2-85-Bold.otf") format("opentype");
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -20,19 +28,18 @@
 :root {
   --background: #F0F6DB;
   --foreground: #232323;
-  --font-langyuan: "LangYuan", sans-serif;
-  --font-edu-hand-bold: "EduHand", sans-serif;
+  --font-langyuan: "AlibabaPuHuiTi", sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "LangYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "AlibabaPuHuiTi", sans-serif;
 }

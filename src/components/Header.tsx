@@ -19,7 +19,7 @@ export default function Header({ chartDetail, onBack }: { chartDetail?: { stage:
           </h2>
           <span
             className="text-[14px] font-bold text-[#000000] whitespace-nowrap"
-            style={{ fontFamily: "var(--font-edu-hand-bold), sans-serif" }}
+            style={{ fontFamily: "var(--font-inter), sans-serif" }}
           >
             Introduction
           </span>
@@ -28,16 +28,16 @@ export default function Header({ chartDetail, onBack }: { chartDetail?: { stage:
         <div className="flex-1" />
       )}
       <div className="flex items-center gap-2 shrink-0">
-        <div className="flex items-center gap-1 px-3 py-[9px] rounded-full border-[1.5px] border-black bg-[#F2FDC9]" style={{ boxShadow: "0px 2px 0px #1C252E" }}>
+        <div className="flex items-center gap-1 px-3 py-[9px] rounded-full bg-[#F2FDC9]">
           <span className="text-sm font-black text-[#080808]">等级：Lv4</span>
         </div>
 
-        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full border-[1.5px] border-black bg-[#F2FDC9] transition-all hover:brightness-[0.97]" style={{ boxShadow: "0px 2px 0px #1C252E" }}>
+        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full bg-[#F2FDC9] transition-all hover:brightness-[0.97]">
           <Flag className="w-4 h-4 text-[#080808]" />
           <span className="text-sm font-black text-[#080808]">任务中心</span>
         </button>
 
-        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full border-[1.5px] border-black bg-[#F2FDC9] transition-all hover:brightness-[0.97]" style={{ boxShadow: "0px 2px 0px #1C252E" }}>
+        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full bg-[#F2FDC9] transition-all hover:brightness-[0.97]">
           <User className="w-4 h-4 text-[#080808]" />
           <span className="text-sm font-black text-[#080808]">Kv</span>
         </button>

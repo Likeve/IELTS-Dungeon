@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star, Sparkles } from "lucide-react";
+import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, CheckCircle2, Send, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ParametricMapChart from "./ParametricMapChart";
 import {
@@ -36,8 +36,6 @@ const STAGE_COMPLETE_MESSAGES = [
   "🏆 干得漂亮！现在轮到你改写题目，写出雅思写作的开头啦！",
   "✨ 挑战开始！根据刚刚收集的线索，完成你的 Introduction。",
 ];
-
-const STORAGE_KEY = "ielts_writing_progress";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
@@ -159,11 +157,6 @@ function shuffleQuestionsAndOptions(
   });
 }
 
-interface StoredProgress {
-  unlocked: Record<string, number[]>;
-  xp: number;
-}
-
 interface ParagraphEvaluation {
   band: number;
   strengths: string[];
@@ -188,31 +181,11 @@ interface EssayEvaluation {
   source: "ai" | "local";
 }
 
-function loadProgress(): StoredProgress | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed.xp !== "number") return null;
-    return parsed as StoredProgress;
-  } catch { return null; }
-}
-
-function saveProgress(unlocked: Record<string, Set<number>>, xp: number) {
-  try {
-    const unlockedArray: Record<string, number[]> = {};
-    for (const key of Object.keys(unlocked)) {
-      unlockedArray[key] = Array.from(unlocked[key]).sort();
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ unlocked: unlockedArray, xp }));
-  } catch {}
-}
-
 const CHART_ICONS: Record<ChartType, React.ComponentType<{ className?: string }>> = {
   line: TrendingUp, bar: BarChart3, pie: PieChart, table: Table2, map: Map, flowchart: GitBranch,
 };
 
-const LINE_CHART_COLORS = ["#3F72E3", "#0DD6FF", "#0DFF9E"];
+const LINE_CHART_COLORS = ["#EFA92D", "#D04A49", "#1FCD90"];
 
 function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
   const chartData = useMemo(() => ({
@@ -254,7 +227,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
         grid: { display: false },
         ticks: {
           color: "#64725D",
-          font: { family: "var(--font-nunito)", size: 12 },
+          font: { family: "var(--font-inter)", size: 12 },
         },
         border: { display: false },
       },
@@ -262,7 +235,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
         grid: { color: "#E8E8DA" },
         ticks: {
           color: "#64725D",
-          font: { family: "var(--font-nunito)", size: 12 },
+          font: { family: "var(--font-inter)", size: 12 },
         },
         border: { display: false, dash: [8, 8], dashOffset: 0 },
       },
@@ -274,7 +247,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
       {yLabel && (
         <span
           className="shrink-0 text-center text-[14px] leading-[22px]"
-          style={{ fontFamily: "var(--font-nunito), sans-serif", fontWeight: 400, color: "#64725D" }}
+          style={{ fontFamily: "var(--font-inter), sans-serif", fontWeight: 400, color: "#64725D" }}
         >
           {yLabel}
         </span>
@@ -291,7 +264,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
                 <span
                   className="text-[14px] font-bold text-[#232323] whitespace-nowrap leading-[20px]"
-                  style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+                  style={{ fontFamily: "var(--font-inter), sans-serif" }}
                 >
                   {series.name}
                 </span>
@@ -323,7 +296,7 @@ function BarChartSVG({ data }: { data: BarChartData }) {
           return (
             <g key={i}>
               <line x1={padding.left} y1={y} x2={w - padding.right} y2={y} stroke="#E8E8DA" strokeWidth="1" />
-              <text x={padding.left - 8} y={y + 4} textAnchor="end" style={{ fontSize: 12 }} fill="#64725D" fontFamily="Nunito" fontWeight={400}>{Math.round(val)}</text>
+              <text x={padding.left - 8} y={y + 4} textAnchor="end" style={{ fontSize: 12 }} fill="#64725D" fontFamily="var(--font-inter)" fontWeight={400}>{Math.round(val)}</text>
             </g>
           );
         })}
@@ -335,7 +308,7 @@ function BarChartSVG({ data }: { data: BarChartData }) {
           return (
             <g key={i}>
               <rect x={x} y={y} width={barW} height={barH} rx="4" fill="#3F72E3" opacity="0.85" />
-              <text x={x + barW / 2} y={padding.top + plotH + h * 0.05} textAnchor="middle" style={{ fontSize: 12 }} fill="#64725D" fontFamily="Nunito" fontWeight={400}>{label}</text>
+              <text x={x + barW / 2} y={padding.top + plotH + h * 0.05} textAnchor="middle" style={{ fontSize: 12 }} fill="#64725D" fontFamily="var(--font-inter)" fontWeight={400}>{label}</text>
             </g>
           );
         })}
@@ -375,7 +348,7 @@ function PieChartSVG({ data }: { data: PieChartData }) {
               {seg.value / total > 0.04 && (
                 <>
                   <line x1={x1 + (x2 - x1) * 0.5} y1={y1 + (y2 - y1) * 0.5} x2={lx} y2={ly} stroke="#9CA3AF" strokeWidth="0.5" />
-                  <text x={lx > cx ? lx + 4 : lx - 4} y={ly + 4} textAnchor={lx > cx ? "start" : "end"} style={{ fontSize: 14 }} fill="#374151" fontFamily="Nunito" fontWeight={500}>{seg.label} ({seg.value}%)</text>
+                  <text x={lx > cx ? lx + 4 : lx - 4} y={ly + 4} textAnchor={lx > cx ? "start" : "end"} style={{ fontSize: 14 }} fill="#374151" fontFamily="var(--font-inter)" fontWeight={500}>{seg.label} ({seg.value}%)</text>
                 </>
               )}
             </g>
@@ -393,7 +366,7 @@ function TableChart({ data }: { data: TableData }) {
         <thead>
           <tr className="bg-[#ECECE1]">
             {data.headers.map((h, i) => (
-              <th key={i} className="px-3 py-2 text-left font-medium text-[#232323] border border-[#D4D4C8] text-[14px]" style={{ fontFamily: "Nunito" }}>{h}</th>
+              <th key={i} className="px-3 py-2 text-left font-medium text-[#232323] border border-[#D4D4C8] text-[14px]" style={{ fontFamily: "var(--font-inter)" }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -401,7 +374,7 @@ function TableChart({ data }: { data: TableData }) {
           {data.rows.map((row, ri) => (
             <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-[#FDFFF7]"}>
               {row.map((cell, ci) => (
-                <td key={ci} className="px-3 py-2 border border-[#D4D4C8] text-[#4B5563] font-normal text-[12px]" style={{ fontFamily: "Nunito" }}>{cell}</td>
+                <td key={ci} className="px-3 py-2 border border-[#D4D4C8] text-[#4B5563] font-normal text-[12px]" style={{ fontFamily: "var(--font-inter)" }}>{cell}</td>
               ))}
             </tr>
           ))}
@@ -430,7 +403,7 @@ function FlowChartSVG({ data }: { data: FlowchartData }) {
           return (
             <g key={i}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray={edge.label ? "6,3" : ""} />
-              {edge.label && <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 6} textAnchor="middle" style={{ fontSize: 12 }} fill="#6B7280" fontFamily="Nunito" fontWeight={400}>{edge.label}</text>}
+              {edge.label && <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 6} textAnchor="middle" style={{ fontSize: 12 }} fill="#6B7280" fontFamily="var(--font-inter)" fontWeight={400}>{edge.label}</text>}
             </g>
           );
         })}
@@ -439,7 +412,7 @@ function FlowChartSVG({ data }: { data: FlowchartData }) {
             <rect x={node.x * sx} y={node.y * sy} width={node.width * sx} height={node.height * sy} rx="8" fill={node.color} stroke="#232323" strokeWidth="1" opacity="0.9" />
             <foreignObject x={node.x * sx} y={node.y * sy} width={node.width * sx} height={node.height * sy}>
               <div className="w-full h-full flex items-center justify-center text-center px-1">
-                <span className="font-medium text-[#1D2838] leading-tight whitespace-pre-line" style={{ fontFamily: "Nunito", fontSize: 14 }}>{node.label}</span>
+                <span className="font-medium text-[#1D2838] leading-tight whitespace-pre-line" style={{ fontFamily: "var(--font-inter)", fontSize: 14 }}>{node.label}</span>
               </div>
             </foreignObject>
           </g>
@@ -485,7 +458,7 @@ function GhostSuggestion({
   return (
     <div
       className="absolute inset-0 pointer-events-none text-[14px] font-bold leading-[22px] whitespace-pre-wrap break-words overflow-hidden"
-      style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+      style={{ fontFamily: "var(--font-inter), sans-serif" }}
       aria-hidden="true"
     >
       <span className="text-[#000000]">{ghost.slice(0, input.length)}</span>
@@ -523,6 +496,7 @@ function StageCard({
 }) {
   const isLocked = status === "locked";
   const isDone = status === "done";
+  const isInProgress = status === "in_progress";
   const isClickable = !isLocked && onClick != null;
 
   if (stage > 4) {
@@ -531,8 +505,7 @@ function StageCard({
       <motion.button
         onClick={onClick}
         disabled={!isClickable}
-        whileHover={isClickable ? { scale: 1.02 } : {}}
-        whileTap={isClickable ? { scale: 0.97 } : {}}
+
         className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-[1.5px] border-dashed transition-all ${
           isClickable
             ? "bg-[#FCFF98] border-black cursor-pointer"
@@ -552,53 +525,62 @@ function StageCard({
     <motion.div
       initial={false}
       onClick={isClickable ? onClick : undefined}
-      className={`flex flex-col gap-4 px-[13px] py-[16px] rounded-2xl border-[1.5px] transition-colors ${
-        isClickable ? "cursor-pointer hover:shadow-md active:scale-[0.98]" : ""
-      } ${
-        isActive
-          ? "border-black shadow-[0_2px_0_#222]"
-          : "border-transparent"
-      }`}
+      className={`flex flex-col gap-4 px-4 py-[13px] rounded-2xl border-[1.5px] transition-colors ${
+        isClickable ? "cursor-pointer" : ""
+      } border-transparent`}
       style={{ backgroundColor: "#F0F6DB" }}
     >
       {/* Header row */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 group relative">
         {/* Icon */}
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 p-2"
           style={{ backgroundColor: "#DBE3C2" }}
         >
           {isDone ? (
-            <CheckCircle2 className="w-5 h-5 text-[#52B543]" />
+            <CheckCircle2 className="w-6 h-6 text-[#52B543]" />
           ) : isLocked ? (
-            <img src="/lock.svg" alt="locked" className="w-5 h-5" />
+            <img src="/lock.svg" alt="locked" className="w-6 h-6" />
           ) : (
-            <img src="/unlock.svg" alt="unlock" className="w-5 h-5" />
+            <img src="/unlock.svg" alt="unlock" className="w-6 h-6" />
           )}
         </div>
 
         {/* Text */}
         <div className="flex-1 min-w-0 flex flex-col">
           <span
-            className={`text-[14px] leading-[22px] ${isLocked ? "text-[#9CA3AF]" : "text-[#191919]"}`}
+            className="text-[14px] leading-[22px] text-[#191919] font-bold"
             style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
           >
             {STAGE_TITLES[stage - 1]}
           </span>
-          <span className="text-[14px] leading-[22px] text-[#969A86]"
-            style={{ fontFamily: "var(--font-eduhand), sans-serif" }}>
+          <span className="text-[12px] leading-[20px] text-[#969A86] font-medium"
+            style={{ fontFamily: "var(--font-inter), sans-serif" }}>
             {STAGE_SUBTITLES[stage - 1]}
           </span>
         </div>
 
         {/* Badge */}
         <div
-          className="flex flex-col items-center justify-center px-2 pt-0 pb-1 rounded-lg shrink-0"
-          style={{ backgroundColor: "#DBE3C2" }}
+          className="px-2 py-1 rounded-lg shrink-0"
+          style={{ backgroundColor: isInProgress ? "#56F7AC" : "#DBE3C2" }}
         >
-          <span className="text-[14px] leading-[22px] text-[#191919]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+          <span className="text-[12px] leading-[20px] font-medium text-[#191919]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
             {STAGE_BADGES[stage - 1]}
           </span>
+        </div>
+
+        {/* Hover tooltip */}
+        <div
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block z-10"
+        >
+          <div
+            className="px-3 py-2 rounded-xl text-[12px] leading-[18px] text-[#232323] whitespace-nowrap shadow-sm"
+            style={{ backgroundColor: "#FFFCF4", fontFamily: "var(--font-langyuan), sans-serif" }}
+          >
+            <span className="font-bold">{STAGE_TITLES[stage - 1]}: </span>
+            {STAGE_DESCRIPTIONS[stage - 1]}
+          </div>
         </div>
       </div>
 
@@ -636,10 +618,44 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
   const [internalView, setInternalView] = useState<"list" | "detail">("list");
   const isControlled = externalView !== undefined;
   const view = isControlled ? externalView : internalView;
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const pendingExitRef = useRef<(() => void) | null>(null);
+
   const setView = useCallback((next: "list" | "detail") => {
+    // 从 detail 返回 list 时弹窗确认
+    if (view === "detail" && next === "list") {
+      pendingExitRef.current = () => {
+        if (!isControlled) setInternalView(next);
+        onViewChange?.(next);
+      };
+      setShowExitConfirm(true);
+      return;
+    }
     if (!isControlled) setInternalView(next);
     onViewChange?.(next);
-  }, [isControlled, onViewChange]);
+  }, [isControlled, onViewChange, view]);
+
+  const confirmExit = useCallback(() => {
+    setShowExitConfirm(false);
+    pendingExitRef.current?.();
+    pendingExitRef.current = null;
+  }, []);
+
+  const cancelExit = useCallback(() => {
+    setShowExitConfirm(false);
+    pendingExitRef.current = null;
+  }, []);
+
+  // 浏览器刷新/关闭时提示
+  useEffect(() => {
+    if (view !== "detail") return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [view]);
+
   const [charts, setCharts] = useState<ChartItem[] | null>(null);
   const [chartsLoading, setChartsLoading] = useState(true);
   const [activeType, setActiveType] = useState<ChartType>("line");
@@ -650,20 +666,13 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
     paragraph3: ParagraphWritingData; paragraph4: ParagraphWritingData;
   }> | null>(null);
 
-  const [unlockedParagraphs, setUnlockedParagraphs] = useState<Record<string, Set<number>>>(() => {
-    const saved = loadProgress();
-    if (saved?.unlocked) {
-      const r: Record<string, Set<number>> = {};
-      for (const k of Object.keys(saved.unlocked)) r[k] = new Set(saved.unlocked[k]);
-      return r;
-    }
-    return {};
-  });
-  const [xp, setXp] = useState(() => loadProgress()?.xp || 0);
+  const [unlockedParagraphs, setUnlockedParagraphs] = useState<Record<string, Set<number>>>({});
+  const [xp, setXp] = useState(0);
 
   const [activeParagraph, setActiveParagraph] = useState(1);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionFeedback, setQuestionFeedback] = useState<Record<string, "correct" | "incorrect">>({});
+  const [shakeError, setShakeError] = useState(false);
   const [discoveredClues, setDiscoveredClues] = useState<string[]>([]);
 
   const [showRoadmap, setShowRoadmap] = useState(false);
@@ -704,10 +713,6 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
       .catch(() => setParagraphsData({}));
   }, []);
 
-  useEffect(() => {
-    saveProgress(unlockedParagraphs, xp);
-  }, [unlockedParagraphs, xp]);
-
   const typeCharts = charts ? charts.filter((c) => c.type === activeType) : [];
   const currentChart = typeCharts[activeIndex];
   const chartKey = currentChart?.id || "";
@@ -737,7 +742,6 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
   // Reset stage and prepare new shuffled questions when chartKey changes
   useEffect(() => {
     setParagraphInput("");
-    setParagraphInputs({});
     setParagraphEvaluations({});
     setCurrentQuestionIndex(0);
     setQuestionFeedback({});
@@ -760,7 +764,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
   useEffect(() => {
     // Restore saved paragraph input when entering a stage
     setParagraphInput(paragraphInputs[activeParagraph] || "");
-  }, [activeParagraph, paragraphInputs]);
+  }, [activeParagraph, paragraphInputs, chartKey]);
 
   useEffect(() => {
     if (stageComplete) {
@@ -827,10 +831,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
   const [burstOverlay, setBurstOverlay] = useState<{ w: number; h: number } | null>(null);
 
   const handleAnswer = (optKey: string) => {
-    if (!currentQ || questionFeedback[currentQ.id]) return;
+    if (!currentQ || questionFeedback[currentQ.id] === "correct") return;
     const isCorrect = optKey === currentQ.correctAnswer;
-    setQuestionFeedback((prev) => ({ ...prev, [currentQ.id]: isCorrect ? "correct" : "incorrect" }));
     if (isCorrect) {
+      setQuestionFeedback((prev) => ({ ...prev, [currentQ.id]: "correct" }));
       const textMatch = currentQ.options.find((o) => o.startsWith(optKey));
       const clue = textMatch ? textMatch.replace(/^[A-D]\s+/, "") : "";
       if (clue && !discoveredClues.includes(clue)) {
@@ -843,7 +847,6 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
       } catch {
         // ignore
       }
-      // Launch particle burst overlay & advance immediately
       setBurstOverlay({ w: 140, h: 48 });
       setTimeout(() => setBurstOverlay(null), 1200);
       if (currentQuestionIndex < totalQuestions - 1) {
@@ -851,6 +854,15 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
       } else {
         setStageComplete(true);
       }
+    } else {
+      // 错误音效 + shake 动画，所有选项闪红，用户可以重新答题
+      try {
+        const audio = new Audio("/Audios/error.mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+      } catch { /* ignore */ }
+      setShakeError(true);
+      setTimeout(() => setShakeError(false), 500);
     }
   };
 
@@ -910,8 +922,18 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
         setParagraphEvaluations((prev) => ({ ...prev, [activeParagraph]: data as ParagraphEvaluation }));
         setParagraphInputs((prev) => ({ ...prev, [activeParagraph]: paragraphInput }));
         setShowParagraphResult(true);
-        if (data.band > 4.5) {
-          unlockParagraph(activeParagraph);
+        unlockParagraph(activeParagraph);
+
+        // Auto-advance to next stage after submission
+        if (activeParagraph < 4) {
+          setCurrentQuestionIndex(0);
+          setQuestionFeedback({});
+          setDiscoveredClues([]);
+          setStageComplete(false);
+          setExpressions([]);
+          setParagraphInput("");
+          shuffledRef.current = false;
+          setActiveParagraph((prev) => prev + 1);
         }
       }
     } catch {
@@ -958,17 +980,27 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
       return;
     }
     if (stage === activeParagraph) return;
+    // 只有已解锁的关卡才能切换（当前关卡始终可访问，其他关卡需提交上一段落后才解锁）
+    if (!unlockedParagraphNumbers.has(stage)) return;
     // 保存当前段落输入
     setParagraphInputs((inputs) => ({ ...inputs, [activeParagraph]: paragraphInput }));
     // 切换到目标关卡
     setActiveParagraph(stage);
-    // 重置答题相关状态
-    setCurrentQuestionIndex(0);
-    setQuestionFeedback({});
-    setDiscoveredClues([]);
-    setStageComplete(false);
-    setExpressions([]);
-    shuffledRef.current = false;
+
+    if (completedParagraphs.has(stage)) {
+      // 已完成关卡：加载已提交的段落，保留完成状态
+      setParagraphInput(paragraphInputs[stage] || "");
+      setStageComplete(true);
+    } else {
+      // 未完成关卡：重置答题相关状态
+      setCurrentQuestionIndex(0);
+      setQuestionFeedback({});
+      setDiscoveredClues([]);
+      setStageComplete(false);
+      setExpressions([]);
+      setParagraphInput("");
+      shuffledRef.current = false;
+    }
   };
 
   if (chartsLoading || !paragraphsData) {
@@ -1010,7 +1042,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                       ? "bg-[#ECECE1] text-[#232323]"
                       : "bg-[#ECECE0] text-[#949481] hover:text-[#555]"
                   }`}
-                  style={{ fontFamily: "Arial" }}
+                  style={{ fontFamily: "var(--font-inter)" }}
                 >
                   <Icon className="w-4 h-4" />
                   {CHART_TYPE_LABELS[type]}
@@ -1040,14 +1072,14 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                       <div className="w-7 h-7 rounded-full bg-[#ECECE1] flex items-center justify-center">
                         <Icon className="w-4 h-4 text-[#232323]" />
                       </div>
-                      <span className="text-[11px] font-bold text-[#949481]" style={{ fontFamily: "Arial" }}>
+                      <span className="text-[11px] font-bold text-[#949481]" style={{ fontFamily: "var(--font-inter)" }}>
                         {CHART_TYPE_LABELS[chart.type]}
                       </span>
                     </div>
-                    <h4 className="text-[15px] font-bold text-[#232323] leading-snug" style={{ fontFamily: "Nunito, sans-serif" }}>
+                    <h4 className="text-[15px] font-bold text-[#232323] leading-snug" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       {chart.title}
                     </h4>
-                    <p className="text-[12px] text-[#8B8B7E] leading-relaxed line-clamp-2" style={{ fontFamily: "Nunito, sans-serif" }}>
+                    <p className="text-[12px] text-[#8B8B7E] leading-relaxed line-clamp-2" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       {chart.question}
                     </p>
                   </div>
@@ -1068,12 +1100,12 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
       {/* ── Detail view (challenge) ── */}
       {view === "detail" && currentChart && (
       <>
-      <div className="flex flex-col flex-1 min-h-0 relative overflow-hidden bg-[#F0F6DB]" >
+      <div className="flex flex-col flex-1 min-h-0 relative bg-[#F0F6DB]" >
         <div className="flex flex-col gap-4 flex-1 min-h-0 p-6">
           {/* Content split */}
           <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
             {/* Left column: Unified Roadmap + Stage Task panel */}
-            <div className="w-full lg:w-[30%] flex flex-col gap-4 min-h-0 h-full overflow-y-auto">
+            <div className="w-full lg:w-[30%] flex flex-col gap-4 min-h-0 h-full">
               {/* Roadmap card */}
               <div
                 className="flex flex-col gap-3 p-4 rounded-3xl flex-1 min-h-0"
@@ -1081,9 +1113,9 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
               >
                 {/* Header */}
                 <div className="flex items-center justify-start gap-3">
-                  <img src="/map_icon.svg" alt="map" className="w-8 h-8" />
+                  <img src="/map_icon.svg" alt="map" className="w-6 h-6" />
                   <span
-                    className="text-[18px] text-[#000000]"
+                    className="text-[14px] text-[#000000] font-bold"
                     style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
                   >
                     闯关地图
@@ -1091,34 +1123,24 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                 </div>
 
                 {/* Stage cards list */}
-                <div className="flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto">
+                <div className="flex flex-col gap-2 flex-1 min-h-0">
                   {/* Stage 1 */}
                   <StageCard
                     stage={1}
-                    status={activeParagraph === 1 ? "in_progress" : completedParagraphs.has(1) ? "done" : "locked"}
+                    status={activeParagraph === 1 ? "in_progress" : "available"}
                     isActive={activeParagraph === 1}
                     onClick={() => handleStageClick(1)}
                   >
                     {/* Description + Clues */}
                     <div className="flex flex-col gap-3">
-                      <p className="text-[14px] leading-[22px] text-[#969A86]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                        <span className="font-bold text-[#2C2E26]">段落要点: </span>
-                        <span className="text-[#2C2E26]">{STAGE_DESCRIPTIONS[0]}</span>
-                      </p>
                       {completedParagraphs.has(activeParagraph) ? (
-                        <div className="px-3 py-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
-                          <span className="text-[12px] font-black text-[#52B543]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                            ✅ 已完成
-                          </span>
-                          <p className="text-[13px] leading-[22px] text-[#232323] mt-1" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                        <div className="flex flex-col gap-2 p-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
+                          <p className="text-[13px] leading-[22px] text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                             {paragraphInputs[activeParagraph] || paragraphInput}
                           </p>
                         </div>
                       ) : (
-                        <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
-                          <span className="text-[14px] leading-[20px] text-[#000000]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                            线索区 1/3
-                          </span>
+                        <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
                           {[0, 1, 2].map((idx) => {
                             const clue = discoveredClues[idx];
                             if (clue) {
@@ -1128,7 +1150,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                   className="flex items-center px-3 py-3 min-h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                   style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                 >
-                                  <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                                  <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                                     {idx + 1}. {clue}
                                   </span>
                                 </div>
@@ -1141,10 +1163,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                 style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                               >
                                 <span
-                                  className="text-[14px] font-bold"
-                                  style={{ color: "#C9CCBC", fontFamily: "var(--font-nunito), sans-serif" }}
+                                  className="text-[14px] font-normal"
+                                  style={{ color: "#A1A68B", fontFamily: "var(--font-langyuan), sans-serif" }}
                                 >
-                                  待发现线索{idx + 1}
+                                  待发现线索
                                 </span>
                               </div>
                             );
@@ -1157,30 +1179,20 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Stage 2 */}
                   <StageCard
                     stage={2}
-                    status={activeParagraph === 2 ? "in_progress" : completedParagraphs.has(2) ? "done" : unlockedParagraphNumbers.has(2) ? "available" : "locked"}
+                    status={activeParagraph === 2 ? "in_progress" : unlockedParagraphNumbers.has(2) ? "available" : "locked"}
                     isActive={activeParagraph === 2}
                     onClick={unlockedParagraphNumbers.has(2) ? () => handleStageClick(2) : undefined}
                   >
                     {/* Description + Clues */}
                     <div className="flex flex-col gap-3">
-                      <p className="text-[14px] leading-[22px] text-[#969A86]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                        <span className="font-bold text-[#2C2E26]">段落要点: </span>
-                        <span className="text-[#2C2E26]">{STAGE_DESCRIPTIONS[1]}</span>
-                      </p>
                       {completedParagraphs.has(activeParagraph) ? (
-                        <div className="px-3 py-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
-                          <span className="text-[12px] font-black text-[#52B543]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                            ✅ 已完成
-                          </span>
-                          <p className="text-[13px] leading-[22px] text-[#232323] mt-1" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                        <div className="flex flex-col gap-2 p-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
+                          <p className="text-[13px] leading-[22px] text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                             {paragraphInputs[activeParagraph] || paragraphInput}
                           </p>
                         </div>
                       ) : (
-                        <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
-                          <span className="text-[14px] leading-[20px] text-[#000000]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                            线索区 1/3
-                          </span>
+                        <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
                           {[0, 1, 2].map((idx) => {
                             const clue = discoveredClues[idx];
                             if (clue) {
@@ -1190,7 +1202,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                   className="flex items-center px-3 py-3 min-h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                   style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                 >
-                                  <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                                  <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                                     {idx + 1}. {clue}
                                   </span>
                                 </div>
@@ -1203,10 +1215,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                 style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                               >
                                 <span
-                                  className="text-[14px] font-bold"
-                                  style={{ color: "#C9CCBC", fontFamily: "var(--font-nunito), sans-serif" }}
+                                  className="text-[14px] font-normal"
+                                  style={{ color: "#A1A68B", fontFamily: "var(--font-langyuan), sans-serif" }}
                                 >
-                                  待发现线索{idx + 1}
+                                  待发现线索
                                 </span>
                               </div>
                             );
@@ -1219,30 +1231,20 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Stage 3 */}
                   <StageCard
                     stage={3}
-                    status={activeParagraph === 3 ? "in_progress" : completedParagraphs.has(3) ? "done" : unlockedParagraphNumbers.has(3) ? "available" : "locked"}
+                    status={activeParagraph === 3 ? "in_progress" : unlockedParagraphNumbers.has(3) ? "available" : "locked"}
                     isActive={activeParagraph === 3}
                     onClick={unlockedParagraphNumbers.has(3) ? () => handleStageClick(3) : undefined}
                   >
                     {activeParagraph === 3 && (
                       <div className="flex flex-col gap-3">
-                        <p className="text-[14px] leading-[22px] text-[#969A86]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                          <span className="font-bold text-[#2C2E26]">段落要点: </span>
-                          <span className="text-[#2C2E26]">{STAGE_DESCRIPTIONS[2]}</span>
-                        </p>
                         {completedParagraphs.has(activeParagraph) ? (
-                          <div className="px-3 py-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
-                            <span className="text-[12px] font-black text-[#52B543]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                              ✅ 已完成
-                            </span>
-                            <p className="text-[13px] leading-[22px] text-[#232323] mt-1" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                          <div className="flex flex-col gap-2 p-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
+                            <p className="text-[13px] leading-[22px] text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                               {paragraphInputs[activeParagraph] || paragraphInput}
                             </p>
                           </div>
                         ) : (
-                          <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
-                            <span className="text-[14px] leading-[20px] text-[#000000]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                              线索区 1/3
-                            </span>
+                          <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
                             {[0, 1, 2].map((idx) => {
                               const clue = discoveredClues[idx];
                               if (clue) {
@@ -1252,7 +1254,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                     className="flex items-center px-3 py-3 min-h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                     style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                   >
-                                    <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                                    <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                                       {idx + 1}. {clue}
                                     </span>
                                   </div>
@@ -1265,10 +1267,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                   style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                 >
                                   <span
-                                    className="text-[14px] font-bold"
-                                    style={{ color: "#C9CCBC", fontFamily: "var(--font-nunito), sans-serif" }}
+                                    className="text-[14px] font-normal"
+                                    style={{ color: "#A1A68B", fontFamily: "var(--font-langyuan), sans-serif" }}
                                   >
-                                    待发现线索{idx + 1}
+                                    待发现线索
                                   </span>
                                 </div>
                               );
@@ -1282,30 +1284,20 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {/* Stage 4 */}
                   <StageCard
                     stage={4}
-                    status={activeParagraph === 4 ? "in_progress" : completedParagraphs.has(4) ? "done" : unlockedParagraphNumbers.has(4) ? "available" : "locked"}
+                    status={activeParagraph === 4 ? "in_progress" : unlockedParagraphNumbers.has(4) ? "available" : "locked"}
                     isActive={activeParagraph === 4}
                     onClick={unlockedParagraphNumbers.has(4) ? () => handleStageClick(4) : undefined}
                   >
                     {activeParagraph === 4 && (
                       <div className="flex flex-col gap-3">
-                        <p className="text-[14px] leading-[22px] text-[#969A86]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                          <span className="font-bold text-[#2C2E26]">段落要点: </span>
-                          <span className="text-[#2C2E26]">{STAGE_DESCRIPTIONS[3]}</span>
-                        </p>
                         {completedParagraphs.has(activeParagraph) ? (
-                          <div className="px-3 py-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
-                            <span className="text-[12px] font-black text-[#52B543]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                              ✅ 已完成
-                            </span>
-                            <p className="text-[13px] leading-[22px] text-[#232323] mt-1" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                          <div className="flex flex-col gap-2 p-3 rounded-xl border-[1.5px] border-[#52B543]" style={{ backgroundColor: "#FAFFE9" }}>
+                            <p className="text-[13px] leading-[22px] text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                               {paragraphInputs[activeParagraph] || paragraphInput}
                             </p>
                           </div>
                         ) : (
-                          <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
-                            <span className="text-[14px] leading-[20px] text-[#000000]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                              线索区 1/3
-                            </span>
+                          <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
                             {[0, 1, 2].map((idx) => {
                               const clue = discoveredClues[idx];
                               if (clue) {
@@ -1315,7 +1307,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                     className="flex items-center px-3 py-3 min-h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                     style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                   >
-                                    <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                                    <span className="text-[14px] font-bold text-[#232323] leading-[22px]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                                       {idx + 1}. {clue}
                                     </span>
                                   </div>
@@ -1328,10 +1320,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                   style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                 >
                                   <span
-                                    className="text-[14px] font-bold"
-                                    style={{ color: "#C9CCBC", fontFamily: "var(--font-nunito), sans-serif" }}
+                                    className="text-[14px] font-normal"
+                                    style={{ color: "#A1A68B", fontFamily: "var(--font-langyuan), sans-serif" }}
                                   >
-                                    待发现线索{idx + 1}
+                                    待发现线索
                                   </span>
                                 </div>
                               );
@@ -1354,7 +1346,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
             {/* Right: Question area */}
             <div
-              className="w-full lg:w-[70%] flex flex-col min-w-0 min-h-0 h-full p-4 gap-3 border-[1.5px] border-black rounded-3xl"
+              className="w-full lg:w-[70%] flex flex-col min-w-0 min-h-0 h-full p-4 gap-3 rounded-3xl"
               style={{ backgroundColor: "#FAFFE9" }}
             >
               {/* Inner question column */}
@@ -1364,7 +1356,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   <img
                     src="/logo2.svg"
                     alt="Yasee"
-                    className="w-10 h-10 shrink-0"
+                    className="w-12 h-12 shrink-0"
                   />
                   <AnimatePresence mode="wait">
                     {currentQ && !stageComplete ? (
@@ -1374,13 +1366,13 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.25 }}
-                        className="px-4 py-3 rounded-3xl shrink-0 self-start border-[1.5px] border-black flex items-center gap-2.5"
-                        style={{ backgroundColor: "#1FCD90" }}
+                        className="px-4 py-3 rounded-3xl shrink-0 self-start flex items-center gap-2.5"
+                        style={{ backgroundColor: "#56F7AC" }}
                       >
-                        <p className="text-[14px] font-bold text-[#100F0E] whitespace-nowrap" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                        <p className="text-[14px] font-bold text-[#100F0E] whitespace-nowrap" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                           {currentQ.question}
                         </p>
-                        <span className="text-[14px] font-medium text-[#100F0E] whitespace-nowrap opacity-60" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                        <span className="text-[14px] font-medium text-[#100F0E] whitespace-nowrap opacity-60" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                           {currentQuestionIndex + 1}/{totalQuestions}
                         </span>
                       </motion.div>
@@ -1391,10 +1383,10 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.25 }}
-                        className="px-4 py-3 rounded-3xl shrink-0 self-start border-[1.5px] border-black"
-                        style={{ backgroundColor: "#1FCD90" }}
+                        className="px-4 py-3 rounded-3xl shrink-0 self-start"
+                        style={{ backgroundColor: "#56F7AC" }}
                       >
-                        <p className="text-[14px] font-bold text-[#100F0E] whitespace-nowrap" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                        <p className="text-[14px] font-bold text-[#100F0E] whitespace-nowrap" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                           {stageCompleteMessage}
                         </p>
                       </motion.div>
@@ -1404,22 +1396,22 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                 {/* Chart card */}
                 <div
-                  className="flex flex-col gap-4 flex-1 min-h-0 p-4 border-[1.5px] border-black rounded-3xl"
+                  className="flex flex-col gap-4 flex-1 min-h-0 p-4 rounded-3xl"
                   style={{ backgroundColor: "#F0F6DB" }}
                 >
                   {/* Title + Description */}
                   <div className="flex flex-col gap-1 shrink-0 text-left">
-                    <h3 className="text-[14px] font-bold text-[#232323] leading-[26px]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
+                    <h3 className="text-[16px] font-bold leading-[26px]" style={{ fontFamily: "var(--font-inter), sans-serif", color: "#100F0E" }}>
                       {currentChart.title}
                     </h3>
-                    <p className="text-[14px] text-[#64725D] leading-[22px]" style={{ fontFamily: "var(--font-nunito), sans-serif", fontWeight: 400 }}>
+                    <p className="text-[14px] leading-[22px]" style={{ fontFamily: "var(--font-inter), sans-serif", fontWeight: 500, color: "#696356" }}>
                       {currentChart.question}
                     </p>
                   </div>
 
                   {/* Chart area */}
                   <div
-                    className="flex-1 min-h-0 p-4 rounded-3xl border-[1.5px] border-black"
+                    className="flex-1 min-h-0 p-4 rounded-3xl"
                     style={{ backgroundColor: "#FAFFE9" }}
                   >
                     {renderChart(currentChart)}
@@ -1428,7 +1420,11 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
 
                 {/* Answer grid or paragraph input */}
                 {!stageComplete && currentQ ? (
-                  <div className="grid grid-cols-2 gap-3 shrink-0 relative">
+                  <motion.div
+                    className="grid grid-cols-2 gap-3 shrink-0 relative"
+                    animate={shakeError ? { x: [-5, 5, -5, 5, 0] } : { x: 0 }}
+                    transition={{ x: { duration: 0.4 } }}
+                  >
                     {/* Particle burst overlay */}
                     {burstOverlay && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
@@ -1438,28 +1434,29 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                     {currentQ.options.map((opt, oi) => {
                       const optKey = String.fromCharCode(65 + oi);
                       const fb = questionFeedback[currentQ.id];
-                      const isCorrectAnswer = fb && optKey === currentQ.correctAnswer;
+                      const isCorrectAnswer = fb === "correct" && optKey === currentQ.correctAnswer;
 
-                      let bg = "#F2FDC9";
-                      let textColor = "#232323";
-                      let border = "1.5px solid #363636";
-                      let shadow = "0px 2px 0px #222222";
-                      if (fb && isCorrectAnswer) { bg = "#ECFDF5"; textColor = "#065F46"; border = "1.5px solid #065F46"; shadow = "0px 4px 0px #A7F3D0"; }
-                      else if (fb) { bg = "#F5F5F0"; textColor = "#9CA3AF"; border = "1.5px solid #D4D4C8"; shadow = "none"; }
+                      let bg = "#F0F6DB";
+                      let textColor = "#222222";
+                      let border = "1.5px solid transparent";
+                      let shadow = "0px 4px 0px 0px rgba(217, 223, 193, 1)";
+                      if (isCorrectAnswer) { bg = "#ECFDF5"; textColor = "#065F46"; border = "1.5px solid #065F46"; shadow = "0px 4px 0px #A7F3D0"; }
+                      else if (fb === "correct" && !isCorrectAnswer) { bg = "#F5F5F0"; textColor = "#9CA3AF"; border = "1.5px solid #D4D4C8"; shadow = "none"; }
+                      else if (shakeError) { bg = "#FEE2E2"; textColor = "#991B1B"; border = "1.5px solid #F87171"; shadow = "0px 4px 0px #FCA5A5"; }
 
                       return (
                         <button
                           key={oi}
                           onClick={() => handleAnswer(optKey)}
-                          disabled={!!fb}
+                          disabled={fb === "correct"}
                           className="flex flex-row justify-center items-center gap-2.5 px-4 py-4 rounded-[99px] text-center text-[14px] font-bold transition-all hover:brightness-95 disabled:cursor-default"
-                          style={{ backgroundColor: bg, color: textColor, fontFamily: "var(--font-nunito), sans-serif", border, boxShadow: shadow }}
+                          style={{ backgroundColor: bg, color: textColor, fontFamily: "var(--font-inter), sans-serif", border, boxShadow: shadow }}
                         >
                           {opt.replace(/^[A-D]\s+/, "")}
                         </button>
                       );
                     })}
-                  </div>
+                  </motion.div>
                 ) : stageComplete ? (
                   <div className="flex flex-col gap-2.5 shrink-0">
                     <div
@@ -1514,7 +1511,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           }}
                           placeholder="The line graph illustrates..."
                           className="absolute inset-0 w-full h-full bg-transparent resize-none outline-none text-[14px] font-bold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
-                          style={{ fontFamily: "var(--font-nunito), sans-serif" }}
+                          style={{ fontFamily: "var(--font-inter), sans-serif" }}
                         />
                         {/* Inline ghost suggestion */}
                         {suggestion && (
@@ -1548,7 +1545,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                               style={{ minWidth: 280, maxWidth: 420 }}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="text-[14px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                                <span className="text-[14px] font-bold text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                                   推荐表达
                                 </span>
                                 <button
@@ -1569,7 +1566,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                     <span
                                       key={i}
                                       className="px-3 py-2.5 rounded-2xl text-[13px] font-bold text-[#404663] leading-[20px] cursor-pointer transition-all hover:brightness-95 relative"
-                                      style={{ backgroundColor: "#E0E3F0", fontFamily: "var(--font-nunito), sans-serif" }}
+                                      style={{ backgroundColor: "#E0E3F0", fontFamily: "var(--font-inter), sans-serif" }}
                                       onMouseEnter={() => {
                                         setHoveredExpr(expr);
                                         fetchExprDetail(expr);
@@ -1638,18 +1635,6 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   </div>
                 ) : null}
 
-                {/* Continue button */}
-                {currentQ && questionFeedback[currentQ.id] === "incorrect" && !stageComplete && (
-                  <div className="flex justify-center">
-                    <button
-                      onClick={handleNextQuestion}
-                      className="px-6 py-2.5 rounded-full text-[14px] font-bold text-[#232323] transition-colors"
-                      style={{ backgroundColor: "#AFFF8A", fontFamily: "var(--font-nunito), sans-serif" }}
-                    >
-                      {currentQuestionIndex < totalQuestions - 1 ? "下一题 →" : "完成本关 ✓"}
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -1676,7 +1661,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[18px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                    <h3 className="text-[18px] font-bold text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       段落评分
                     </h3>
                     <button
@@ -1697,7 +1682,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                     return (
                       <>
                         <div className="flex items-baseline gap-2 mb-5">
-                          <span className="text-[14px] font-bold text-[#64725D]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                          <span className="text-[14px] font-bold text-[#64725D]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                             得分:
                           </span>
                           <div className="flex items-center gap-1">
@@ -1716,7 +1701,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                               <Star key={`empty-${i}`} className="w-6 h-6 text-[#D4D4C8] fill-[#D4D4C8]" />
                             ))}
                           </div>
-                          <span className="text-[14px] text-[#64725D]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                          <span className="text-[14px] text-[#64725D]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                             {starRating.toFixed(1)} / 5
                           </span>
                         </div>
@@ -1730,7 +1715,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         {/* User's original paragraph */}
                         <div className="mb-4">
                           <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>你的段落</h4>
-                          <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                          <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                             {paragraphInputs[activeParagraph] || ""}
                           </p>
                         </div>
@@ -1777,7 +1762,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         {ev.band8Rewrite && (
                           <div className="mb-2">
                             <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>Band 8+ 改写参考</h4>
-                            <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                            <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                               {ev.band8Rewrite}
                             </p>
                           </div>
@@ -1788,7 +1773,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                             onClick={() => { setShowParagraphResult(false); handleEvaluateEssay(); }}
                             disabled={evaluating}
                             className="mt-4 w-full px-6 py-2.5 rounded-full text-sm font-bold text-[#232323] transition-colors"
-                            style={{ backgroundColor: "#AFFF8A", fontFamily: "Nunito, sans-serif" }}
+                            style={{ backgroundColor: "#AFFF8A", fontFamily: "var(--font-inter), sans-serif" }}
                           >
                             {evaluating ? "评分中..." : "查看整篇评分 →"}
                           </button>
@@ -1796,7 +1781,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           <button
                             onClick={() => { setShowParagraphResult(false); handleNextStage(); }}
                             className="mt-4 w-full px-6 py-2.5 rounded-full text-sm font-bold text-[#232323] transition-colors"
-                            style={{ backgroundColor: "#AFFF8A", fontFamily: "Nunito, sans-serif" }}
+                            style={{ backgroundColor: "#AFFF8A", fontFamily: "var(--font-inter), sans-serif" }}
                           >
                             进入下一关 →
                           </button>
@@ -1804,7 +1789,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           <button
                             onClick={() => setShowParagraphResult(false)}
                             className="mt-4 w-full px-6 py-2.5 rounded-full text-sm font-bold text-[#232323] transition-colors"
-                            style={{ backgroundColor: "#E5E5C2", fontFamily: "Nunito, sans-serif" }}
+                            style={{ backgroundColor: "#E5E5C2", fontFamily: "var(--font-inter), sans-serif" }}
                           >
                             继续修改
                           </button>
@@ -1839,7 +1824,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[18px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                    <h3 className="text-[18px] font-bold text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       整篇文章评分
                     </h3>
                     <button
@@ -1851,13 +1836,13 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   </div>
 
                   <div className="flex items-baseline gap-2 mb-5">
-                    <span className="text-[14px] font-bold text-[#64725D]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                    <span className="text-[14px] font-bold text-[#64725D]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       总得分:
                     </span>
-                    <span className="text-[36px] font-black text-[#52B543]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                    <span className="text-[36px] font-black text-[#52B543]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       {essayEvaluation.band.toFixed(1)}
                     </span>
-                    <span className="text-[14px] text-[#64725D]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                    <span className="text-[14px] text-[#64725D]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       / 9.0
                     </span>
                   </div>
@@ -1869,7 +1854,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           <span className="text-[11px] text-[#64725D]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
                             段落 {i + 1}
                           </span>
-                          <span className="text-[16px] font-bold text-[#232323]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                          <span className="text-[16px] font-bold text-[#232323]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                             {b.toFixed(1)}
                           </span>
                         </div>
@@ -1906,7 +1891,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   {essayEvaluation.band8Rewrite && (
                     <div className="mb-2">
                       <h4 className="text-[13px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>Band 8+ 改写参考</h4>
-                      <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "Nunito, sans-serif" }}>
+                      <p className="text-[12px] font-bold text-[#232323] leading-relaxed p-3 rounded-xl bg-[#F0F6DB]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                         {essayEvaluation.band8Rewrite}
                       </p>
                     </div>
@@ -1939,9 +1924,9 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 shrink-0">
                   <div className="flex items-center justify-center gap-3">
-                    <img src="/map_icon.svg" alt="闯关地图" className="w-8 h-8" />
+                    <img src="/map_icon.svg" alt="闯关地图" className="w-6 h-6" />
                     <h2
-                      className="text-[18px] text-[#000000]"
+                      className="text-[14px] text-[#000000] font-bold"
                       style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
                     >
                       闯关地图
@@ -1963,16 +1948,15 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                     </div>
                     <div>
                       <p className="text-xs text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>总经验值</p>
-                      <p className="text-lg font-black text-[#1D2838]" style={{ fontFamily: "var(--font-nunito)" }}>{xp} XP</p>
+                      <p className="text-lg font-black text-[#1D2838]" style={{ fontFamily: "var(--font-inter)" }}>{xp} XP</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Stage cards */}
-                <div className="flex-1 overflow-y-auto px-4">
+                <div className="flex-1 px-4">
                   <div className="flex flex-col gap-2">
                     {[1, 2, 3, 4].map((stage) => {
-                      const isDone = completedParagraphs.has(stage);
                       const isCurrent = activeParagraph === stage;
                       const isLocked = !unlockedParagraphNumbers.has(stage);
                       const stageQuestions = stage === 1 && currentStageData
@@ -1990,23 +1974,19 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         <StageCard
                           key={stage}
                           stage={stage}
-                          status={isDone ? "done" : isCurrent ? "in_progress" : isLocked ? "locked" : "available"}
+                          status={isCurrent ? "in_progress" : isLocked ? "locked" : "available"}
                           isActive={isCurrent}
                           onClick={isLocked ? undefined : () => { handleStageClick(stage); setShowRoadmap(false); }}
                         >
                           {isCurrent && (
                             <div className="flex flex-col gap-3">
-                              <p className="text-[14px] leading-[22px] text-[#969A86]" style={{ fontFamily: "var(--font-nunito), sans-serif" }}>
-                                <span className="font-bold text-[#2C2E26]">段落要点: </span>
-                                <span className="text-[#2C2E26]">{STAGE_DESCRIPTIONS[stage - 1]}</span>
-                              </p>
 
                               {/* Progress for stage 1 (quiz completion) */}
                               {stage === 1 && !stageCompleteForThis && (
                                 <div className="p-3 rounded-xl" style={{ backgroundColor: "#FAFFE9" }}>
                                   <div className="flex items-center justify-between text-[10px] mb-1.5">
                                     <span className="text-[#808771]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>答题进度</span>
-                                    <span className="font-bold text-[#232323]" style={{ fontFamily: "var(--font-nunito)" }}>{questionsDone}/{questionsTotal}</span>
+                                    <span className="font-bold text-[#232323]" style={{ fontFamily: "var(--font-inter)" }}>{questionsDone}/{questionsTotal}</span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     {stageQuestions?.map((q) => {
@@ -2028,14 +2008,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                                 </div>
                               )}
 
-                              {(isDone || stageCompleteForThis) && (
-                                <div className="flex items-center gap-1.5 px-1">
-                                  <Sparkles className="w-3.5 h-3.5 text-[#52B543]" />
-                                  <span className="text-[11px] font-bold text-[#52B543]" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
-                                    已完成
-                                  </span>
-                                </div>
-                              )}
+
                             </div>
                           )}
                         </StageCard>
@@ -2066,6 +2039,36 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
             </>
           )}
         </AnimatePresence>
+
+        {/* Exit confirm dialog */}
+        {showExitConfirm && (
+          <div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-[380px] shadow-2xl text-center">
+              <p className="text-[16px] font-bold text-[#232323] mb-2" style={{ fontFamily: "var(--font-langyuan), sans-serif" }}>
+                离开当前页面
+              </p>
+              <p className="text-[14px] text-[#6B7280] mb-6" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
+                离开该页面将不会保存当前进度，是否确定？
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={cancelExit}
+                  className="flex-1 py-3 rounded-full border-[1.5px] border-[#232323] text-sm font-black text-[#232323]"
+                  style={{ fontFamily: "var(--font-langyuan), sans-serif", backgroundColor: "#F5F5F0" }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={confirmExit}
+                  className="flex-1 py-3 rounded-full bg-[#EF4444] border-[1.5px] border-[#232323] text-sm font-black text-white"
+                  style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
+                >
+                  确认离开
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
       )}
     </>
