@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, Send, Star } from "lucide-react";
+import { TrendingUp, BarChart3, PieChart, Table2, Map, GitBranch, RefreshCw, X, Trophy, ChevronRight, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ParametricMapChart from "./ParametricMapChart";
 import {
@@ -213,7 +213,9 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
         intersect: false,
         backgroundColor: "#111827",
         titleColor: "#fff",
+        titleFont: { family: "'Nunito Sans', sans-serif", size: 14 },
         bodyColor: "#E5E7EB",
+        bodyFont: { family: "'Nunito Sans', sans-serif", size: 14 },
         padding: 12,
         displayColors: false,
       },
@@ -227,7 +229,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
         grid: { display: false },
         ticks: {
           color: "#64725D",
-          font: { family: "var(--font-inter)", size: 12 },
+          font: { family: "'Nunito Sans', sans-serif", size: 14 },
         },
         border: { display: false },
       },
@@ -235,7 +237,7 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
         grid: { color: "#E8E8DA" },
         ticks: {
           color: "#64725D",
-          font: { family: "var(--font-inter)", size: 12 },
+          font: { family: "'Nunito Sans', sans-serif", size: 14 },
         },
         border: { display: false, dash: [8, 8], dashOffset: 0 },
       },
@@ -243,36 +245,38 @@ function LineChart({ data, yLabel }: { data: LineChartData; yLabel?: string }) {
   }), []);
 
   return (
-    <div className="w-full h-full flex flex-col gap-4">
-      {yLabel && (
-        <span
-          className="shrink-0 text-center text-[14px] leading-[22px]"
-          style={{ fontFamily: "var(--font-inter), sans-serif", fontWeight: 400, color: "#64725D" }}
-        >
-          {yLabel}
-        </span>
-      )}
+    <div className="w-full h-full flex flex-col gap-3">
+      <div className="shrink-0 flex items-center justify-between gap-6">
+        {yLabel && (
+          <span
+            className="text-[14px] leading-[22px]"
+            style={{ fontFamily: "var(--font-inter), sans-serif", fontWeight: 500, color: "#1E1D1B" }}
+          >
+            {yLabel}
+          </span>
+        )}
+        {data.series.length > 0 && (
+          <div className="flex items-center gap-6 shrink-0">
+            {data.series.map((series, i) => {
+              const color = LINE_CHART_COLORS[i] || series.color;
+              return (
+                <div key={series.name} className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  <span
+                    className="text-[14px] font-medium whitespace-nowrap leading-[20px]"
+                    style={{ fontFamily: "var(--font-inter), sans-serif", color: "#100F0E" }}
+                  >
+                    {series.name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       <div className="flex-1 min-h-0">
         <Line data={chartData} options={options} />
       </div>
-      {data.series.length > 0 && (
-        <div className="shrink-0 flex items-center justify-center gap-6">
-          {data.series.map((series, i) => {
-            const color = LINE_CHART_COLORS[i] || series.color;
-            return (
-              <div key={series.name} className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                <span
-                  className="text-[14px] font-bold text-[#232323] whitespace-nowrap leading-[20px]"
-                  style={{ fontFamily: "var(--font-inter), sans-serif" }}
-                >
-                  {series.name}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -296,7 +300,7 @@ function BarChartSVG({ data }: { data: BarChartData }) {
           return (
             <g key={i}>
               <line x1={padding.left} y1={y} x2={w - padding.right} y2={y} stroke="#E8E8DA" strokeWidth="1" />
-              <text x={padding.left - 8} y={y + 4} textAnchor="end" style={{ fontSize: 12 }} fill="#64725D" fontFamily="var(--font-inter)" fontWeight={400}>{Math.round(val)}</text>
+              <text x={padding.left - 8} y={y + 4} textAnchor="end" style={{ fontSize: 14 }} fill="#64725D" fontFamily="var(--font-inter)" fontWeight={400}>{Math.round(val)}</text>
             </g>
           );
         })}
@@ -308,7 +312,7 @@ function BarChartSVG({ data }: { data: BarChartData }) {
           return (
             <g key={i}>
               <rect x={x} y={y} width={barW} height={barH} rx="4" fill="#3F72E3" opacity="0.85" />
-              <text x={x + barW / 2} y={padding.top + plotH + h * 0.05} textAnchor="middle" style={{ fontSize: 12 }} fill="#64725D" fontFamily="var(--font-inter)" fontWeight={400}>{label}</text>
+              <text x={x + barW / 2} y={padding.top + plotH + h * 0.05} textAnchor="middle" style={{ fontSize: 14 }} fill="#64725D" fontFamily="var(--font-inter)" fontWeight={400}>{label}</text>
             </g>
           );
         })}
@@ -403,7 +407,7 @@ function FlowChartSVG({ data }: { data: FlowchartData }) {
           return (
             <g key={i}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray={edge.label ? "6,3" : ""} />
-              {edge.label && <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 6} textAnchor="middle" style={{ fontSize: 12 }} fill="#6B7280" fontFamily="var(--font-inter)" fontWeight={400}>{edge.label}</text>}
+              {edge.label && <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 6} textAnchor="middle" style={{ fontSize: 14 }} fill="#6B7280" fontFamily="var(--font-inter)" fontWeight={400}>{edge.label}</text>}
             </g>
           );
         })}
@@ -457,7 +461,7 @@ function GhostSuggestion({
 
   return (
     <div
-      className="absolute inset-0 pointer-events-none text-[14px] font-bold leading-[22px] whitespace-pre-wrap break-words overflow-hidden"
+      className="absolute inset-0 pointer-events-none text-[16px] font-semibold leading-[22px] whitespace-pre-wrap break-words overflow-hidden"
       style={{ fontFamily: "var(--font-inter), sans-serif" }}
       aria-hidden="true"
     >
@@ -1076,7 +1080,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                         {CHART_TYPE_LABELS[chart.type]}
                       </span>
                     </div>
-                    <h4 className="text-[15px] font-bold text-[#232323] leading-snug" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
+                    <h4 className="text-[14px] font-bold text-[#232323] leading-snug" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
                       {chart.title}
                     </h4>
                     <p className="text-[12px] text-[#8B8B7E] leading-relaxed line-clamp-2" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
@@ -1159,7 +1163,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                             return (
                               <div
                                 key={idx}
-                                className="flex items-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
+                                className="flex items-center justify-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                 style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                               >
                                 <span
@@ -1211,7 +1215,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                             return (
                               <div
                                 key={idx}
-                                className="flex items-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
+                                className="flex items-center justify-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                 style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                               >
                                 <span
@@ -1263,7 +1267,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                               return (
                                 <div
                                   key={idx}
-                                  className="flex items-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
+                                  className="flex items-center justify-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                   style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                 >
                                   <span
@@ -1316,7 +1320,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                               return (
                                 <div
                                   key={idx}
-                                  className="flex items-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
+                                  className="flex items-center justify-center px-3 h-[46px] gap-2 rounded-2xl border-[1.5px] border-dashed"
                                   style={{ backgroundColor: "#F0F6DB", borderColor: "#C9CCBC" }}
                                 >
                                   <span
@@ -1335,11 +1339,13 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                   </StageCard>
 
                   {/* Final scoring */}
+                  {completedParagraphs.size >= 4 && (
                   <StageCard
                     stage={5}
                     status={completedParagraphs.size >= 4 ? "available" : "locked"}
                     onClick={completedParagraphs.size >= 4 ? () => handleStageClick(5) : undefined}
                   />
+                  )}
                 </div>
               </div>
             </div>
@@ -1401,7 +1407,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                 >
                   {/* Title + Description */}
                   <div className="flex flex-col gap-1 shrink-0 text-left">
-                    <h3 className="text-[16px] font-bold leading-[26px]" style={{ fontFamily: "var(--font-inter), sans-serif", color: "#100F0E" }}>
+                    <h3 className="text-[14px] font-bold leading-[26px]" style={{ fontFamily: "var(--font-inter), sans-serif", color: "#100F0E" }}>
                       {currentChart.title}
                     </h3>
                     <p className="text-[14px] leading-[22px]" style={{ fontFamily: "var(--font-inter), sans-serif", fontWeight: 500, color: "#696356" }}>
@@ -1460,8 +1466,8 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                 ) : stageComplete ? (
                   <div className="flex flex-col gap-2.5 shrink-0">
                     <div
-                      className="flex flex-col gap-2.5 p-4 rounded-3xl border-[1.5px] h-[140px] min-h-[140px] relative"
-                      style={{ backgroundColor: "#FAFFE9", borderColor: "#000000", boxShadow: "0px 4px 0px 0px rgba(0, 0, 0, 0.1)" }}
+                      className="flex flex-col gap-2.5 p-4 flex-1 min-h-[184px] relative"
+                      style={{ backgroundColor: "#F0F6DB", borderRadius: "24px" }}
                     >
                       <div className="relative flex-1 min-h-0">
                         <textarea
@@ -1510,7 +1516,7 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                             }
                           }}
                           placeholder="The line graph illustrates..."
-                          className="absolute inset-0 w-full h-full bg-transparent resize-none outline-none text-[14px] font-bold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
+                          className="absolute inset-0 w-full h-full bg-transparent resize-none outline-none text-[16px] font-semibold leading-[22px] text-[#000000] placeholder:text-[#A7A794]"
                           style={{ fontFamily: "var(--font-inter), sans-serif" }}
                         />
                         {/* Inline ghost suggestion */}
@@ -1530,10 +1536,9 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           {stageComplete && (
                             <button
                               onClick={() => setShowExpressionsModal(!showExpressionsModal)}
-                              className="px-4 py-2.5 rounded-full text-[14px] text-[#2C2C2C] transition-all hover:brightness-95 flex items-center justify-center gap-2 border-[1.5px] border-[#000000]"
-                              style={{ backgroundColor: "#FCFF98", fontFamily: "var(--font-langyuan), sans-serif" }}
+                              className="px-4 py-2.5 rounded-[16px] text-[14px] font-bold text-[#2C2C2C] transition-all hover:brightness-95 flex items-center justify-center gap-2"
+                              style={{ backgroundColor: "#FFBB5B", fontFamily: "var(--font-langyuan), sans-serif" }}
                             >
-                              <RefreshCw className="w-4 h-4" />
                               推荐表达
                             </button>
                           )}
@@ -1619,13 +1624,13 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                           <button
                             onClick={handleEvaluateParagraph}
                             disabled={evaluating || !paragraphInput.trim()}
-                            className="p-2 rounded-2xl flex items-center justify-center transition-colors hover:brightness-95 disabled:opacity-50"
-                            style={{ backgroundColor: "#E5E5C2" }}
+                            className="p-2 flex items-center justify-center transition-colors hover:brightness-95 disabled:opacity-50"
+                            style={{ backgroundColor: "#232323", borderRadius: "16px" }}
                           >
                             {evaluating ? (
-                              <div className="w-6 h-6 border-2 border-[#232323] border-t-transparent rounded-full animate-spin" />
+                              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <Send className="w-6 h-6 text-[#232323]" />
+                              <img src="/icons/send-icon.svg" alt="发送" className="w-6 h-6" />
                             )}
                           </button>
                         </div>
@@ -2018,11 +2023,13 @@ export default function ChartChallenge({ view: externalView, onViewChange }: { v
                     })}
 
                     {/* Final scoring */}
+                    {completedParagraphs.size >= 4 && (
                     <StageCard
                       stage={5}
                       status={completedParagraphs.size >= 4 ? "available" : "locked"}
                       onClick={completedParagraphs.size >= 4 ? () => { handleStageClick(5); setShowRoadmap(false); } : undefined}
                     />
+                    )}
                   </div>
                 </div>
 

@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
-/* 本地字体 —— 通过 public/Fonts/ 目录直接加载 */
+/* HarmonyOS Sans SC 中文字体 —— 通过 jsDelivr CDN 加载 */
 @font-face {
-  font-family: "AlibabaPuHuiTi";
-  src: url("/Fonts/AlibabaPuHuiTi-2-55-Regular.otf") format("opentype");
+  font-family: "HarmonyOS Sans SC";
+  src: url("https://cdn.jsdelivr.net/npm/@fontpkg/harmony-os-sans-sc@1.0.3/HarmonyOS_Sans_SC_Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "AlibabaPuHuiTi";
-  src: url("/Fonts/AlibabaPuHuiTi-2-65-Medium.otf") format("opentype");
+  font-family: "HarmonyOS Sans SC";
+  src: url("https://cdn.jsdelivr.net/npm/@fontpkg/harmony-os-sans-sc@1.0.3/HarmonyOS_Sans_SC_Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "AlibabaPuHuiTi";
-  src: url("/Fonts/AlibabaPuHuiTi-2-85-Bold.otf") format("opentype");
+  font-family: "HarmonyOS Sans SC";
+  src: url("https://cdn.jsdelivr.net/npm/@fontpkg/harmony-os-sans-sc@1.0.3/HarmonyOS_Sans_SC_Bold.ttf") format("truetype");
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -28,7 +28,7 @@
 :root {
   --background: #F0F6DB;
   --foreground: #232323;
-  --font-langyuan: "AlibabaPuHuiTi", sans-serif;
+  --font-langyuan: "HarmonyOS Sans SC", sans-serif;
 }
 
 @theme inline {
@@ -41,5 +41,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "AlibabaPuHuiTi", sans-serif;
+  font-family: "HarmonyOS Sans SC", sans-serif;
 }

@@ -1,46 +1,39 @@
 "use client";
 
 import React from "react";
-import { Flag, User, ArrowLeft } from "lucide-react";
 
 export default function Header({ chartDetail, onBack }: { chartDetail?: { stage: number } | null; onBack?: () => void }) {
   return (
-    <header className="h-[65px] shrink-0 flex items-center gap-3 px-4 bg-[#FAFFE9] sticky top-0 z-30">
+    <header className="h-[56px] shrink-0 flex items-center justify-between px-4 bg-[#F8FDE9] sticky top-0 z-30">
       {chartDetail ? (
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <button onClick={onBack} className="p-1 hover:opacity-70 transition-opacity" aria-label="返回题目列表">
-            <ArrowLeft className="w-5 h-5 text-[#000000]" />
-          </button>
-          <h2
-            className="text-[14px] text-[#000000] whitespace-nowrap"
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 group"
+          aria-label="返回图表列表"
+        >
+          <img src="/icons/arrow-left.svg" alt="返回" className="w-5 h-5" />
+          <span
+            className="text-[14px] font-bold text-[#191919]"
             style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
           >
-            第{chartDetail.stage}关 ：题目改写
-          </h2>
-          <span
-            className="text-[14px] font-bold text-[#000000] whitespace-nowrap"
-            style={{ fontFamily: "var(--font-inter), sans-serif" }}
-          >
-            Introduction
+            返回图表列表
           </span>
-        </div>
+        </button>
       ) : (
-        <div className="flex-1" />
+        <div />
       )}
-      <div className="flex items-center gap-2 shrink-0">
-        <div className="flex items-center gap-1 px-3 py-[9px] rounded-full bg-[#F2FDC9]">
-          <span className="text-sm font-black text-[#080808]">等级：Lv4</span>
-        </div>
 
-        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full bg-[#F2FDC9] transition-all hover:brightness-[0.97]">
-          <Flag className="w-4 h-4 text-[#080808]" />
-          <span className="text-sm font-black text-[#080808]">任务中心</span>
-        </button>
-
-        <button className="flex items-center gap-1 px-3 py-[9px] rounded-full bg-[#F2FDC9] transition-all hover:brightness-[0.97]">
-          <User className="w-4 h-4 text-[#080808]" />
-          <span className="text-sm font-black text-[#080808]">Kv</span>
-        </button>
+      <div
+        className="flex items-center gap-2 px-3 py-2 rounded-2xl"
+        style={{ backgroundColor: "#F0F6DB" }}
+      >
+        <img src="/icons/profile-circle.svg" alt="用户" className="w-6 h-6" />
+        <span
+          className="text-[14px] font-extrabold text-[#090909]"
+          style={{ fontFamily: "var(--font-langyuan), sans-serif" }}
+        >
+          Kv
+        </span>
       </div>
     </header>
   );
